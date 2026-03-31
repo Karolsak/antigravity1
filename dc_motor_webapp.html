@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DC Motor Speed Control | Full Bridge Converter Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .sub-panel { display: none; }
+    .sub-panel.active { display: block; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #111827; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+    .formula { font-family: 'Courier New', monospace; }
+    input[type=range] { accent-color: #3b82f6; }
+    .card-result { background: #1f2937; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.75rem 1rem; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
+
+  <!-- Sticky Header -->
+  <header class="sticky top-0 z-50 bg-gray-900 border-b border-blue-700 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+      <div>
+        <h1 class="text-xl font-bold text-blue-400">DC Motor Speed Control</h1>
+        <p class="text-xs text-gray-400">Single-Phase Full-Bridge Converter &bull; 110 V &bull; 5 HP &bull; Kb = 0.055 V/rpm</p>
+      </div>
+      <div class="text-right text-xs text-gray-400">
+        <div>AC Supply: 120 V rms, 60 Hz</div>
+        <div id="hdr-results" class="text-blue-300 font-medium"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav class="bg-gray-900 border-b border-gray-700 overflow-x-auto">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex space-x-1 py-2 min-w-max">
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold bg-blue-600 text-white" data-tab="tab1">1. Overview</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab2">2. Parameters</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab3">3. Waveforms</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab4">4. Motor Sim</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab5">5. Fault Current</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab6">6. Protection</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab7">7. Controller</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab8">8. Thermal/Econ</button>
+        <button class="tab-btn px-3 py-1.5 rounded text-xs font-semibold text-gray-400 hover:bg-gray-700" data-tab="tab9">9. Harmonics</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
+
+    <!-- ===== TAB 1: Overview & Theory ===== -->
+    <div id="tab1" class="tab-panel active">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Overview &amp; Theory</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Problem Statement -->
+        <div class="bg-gray-900 rounded-xl p-5 border border-gray-700">
+          <h3 class="text-lg font-semibold text-yellow-400 mb-3">Problem Statement</h3>
+          <p class="text-sm text-gray-300 leading-relaxed">
+            A <span class="text-white font-semibold">110 V, 5 HP DC motor</span> has its speed controlled by a
+            <span class="text-blue-300 font-semibold">single-phase full-bridge converter</span>.
+            The AC supply is <span class="text-white font-semibold">120 V rms, 60 Hz</span>.
+            Motor voltage constant <span class="text-green-400 formula">Kb = 0.055 V/rpm</span>.
+            Armature resistance <span class="text-green-400 formula">Ra = 0.5 Ω</span>.
+            Inductance La is high (continuous current assumed).
+          </p>
+          <div class="mt-3 p-3 bg-blue-900/30 rounded-lg border border-blue-700">
+            <p class="text-xs text-blue-200">The full-bridge (H-bridge) rectifier uses 4 thyristors (SCRs) in a bridge
+            configuration. By controlling the firing angle α, the average DC output voltage is adjusted to control motor speed.</p>
+          </div>
+        </div>
+        <!-- Theory -->
+        <div class="bg-gray-900 rounded-xl p-5 border border-gray-700">
+          <h3 class="text-lg font-semibold text-yellow-400 mb-3">Full-Bridge Converter Theory</h3>
+          <div class="space-y-2 text-sm formula text-gray-200">
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Supply peak:</span><span>Vm = Vs &times; &radic;2</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Avg DC voltage:</span><span>Vdc = (2Vm/&pi;) &times; cos(&alpha;)</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Back-EMF:</span><span>E = Kb &times; N (V/rpm)</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Firing angle:</span><span>&alpha; = arccos(E / Vm2)</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Rated current:</span><span>Ia = P / Vrated</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Fund. rms:</span><span>I1 = 4Ia / (&pi;&radic;2)</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Disp. PF:</span><span>DPF = cos(&alpha;)</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Distortion F:</span><span>DF = I1_rms / Is_rms</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">Total PF:</span><span>PF = DPF &times; DF</span></div>
+            <div class="flex items-center gap-2"><span class="text-blue-400 w-32">THD:</span><span>&radic;(Is&sup2; - I1&sup2;) / I1 &times; 100%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step-by-Step Solution -->
+      <div class="bg-gray-900 rounded-xl p-5 border border-gray-700 mb-6">
+        <h3 class="text-lg font-semibold text-yellow-400 mb-4">Step-by-Step Solution (N = 1000 rpm)</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+          <div class="bg-gray-800 rounded p-3 border-l-4 border-blue-500">
+            <div class="text-xs text-gray-400 mb-1">Step 1 — Peak Voltage</div>
+            <div class="formula text-blue-300">Vm = 120 &times; &radic;2 = 169.71 V</div>
+            <div class="formula text-gray-400 text-xs">Vm2 = 2&times;169.71/&pi; = 108.06 V</div>
+          </div>
+          <div class="bg-gray-800 rounded p-3 border-l-4 border-green-500">
+            <div class="text-xs text-gray-400 mb-1">Step 2 — Rated Current</div>
+            <div class="formula text-green-300">Ia = 5&times;746/110 = 33.91 A</div>
+            <div class="formula text-gray-400 text-xs">P = 5 HP = 3730 W</div>
+          </div>
+          <div class="bg-gray-800 rounded p-3 border-l-4 border-yellow-500">
+            <div class="text-xs text-gray-400 mb-1">Step 3 — Back-EMF</div>
+            <div class="formula text-yellow-300">E = 0.055 &times; 1000 = 55 V</div>
+            <div class="formula text-gray-400 text-xs">Vdc = E = 55 V (at rated)</div>
+          </div>
+          <div class="bg-gray-800 rounded p-3 border-l-4 border-purple-500">
+            <div class="text-xs text-gray-400 mb-1">Step 4 — Firing Angle</div>
+            <div class="formula text-purple-300">&alpha; = arccos(55/108.06) = 59.35&deg;</div>
+            <div class="formula text-gray-400 text-xs">cos&alpha; = 0.5090</div>
+          </div>
+          <div class="bg-gray-800 rounded p-3 border-l-4 border-pink-500">
+            <div class="text-xs text-gray-400 mb-1">Step 5 — Thyristor Currents</div>
+            <div class="formula text-pink-300">IT_avg = 16.95 A</div>
+            <div class="formula text-gray-400 text-xs">IT_rms = 33.91/&radic;2 = 23.99 A</div>
+          </div>
+          <div class="bg-gray-800 rounded p-3 border-l-4 border-orange-500">
+            <div class="text-xs text-gray-400 mb-1">Step 6 — Power Quality</div>
+            <div class="formula text-orange-300">PF = 0.4582, THD = 48.43%</div>
+            <div class="formula text-gray-400 text-xs">S = 4069 VA, P = 1865 W</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="bg-gray-900 rounded-xl p-5 border border-gray-700 mb-6">
+        <h3 class="text-lg font-semibold text-yellow-400 mb-4">Complete Results Summary</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-700">
+                <th class="text-left py-2 px-3 text-gray-400">Quantity</th>
+                <th class="text-left py-2 px-3 text-gray-400">Symbol</th>
+                <th class="text-right py-2 px-3 text-gray-400">Value</th>
+                <th class="text-left py-2 px-3 text-gray-400">Unit</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-300">
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">AC Supply (rms)</td><td class="formula px-3">Vs</td><td class="text-right px-3 text-blue-300">120.00</td><td class="px-3">V</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Peak Voltage</td><td class="formula px-3">Vm</td><td class="text-right px-3 text-blue-300">169.71</td><td class="px-3">V</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Avg Rectified Vm</td><td class="formula px-3">Vm2 = 2Vm/π</td><td class="text-right px-3 text-blue-300">108.06</td><td class="px-3">V</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Back-EMF @ 1000 rpm</td><td class="formula px-3">E</td><td class="text-right px-3 text-green-300">55.00</td><td class="px-3">V</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">DC Output Voltage</td><td class="formula px-3">Vdc</td><td class="text-right px-3 text-green-300">55.00</td><td class="px-3">V</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Firing Angle</td><td class="formula px-3">α</td><td class="text-right px-3 text-yellow-300">59.35</td><td class="px-3">deg</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Armature Current (rated)</td><td class="formula px-3">Ia</td><td class="text-right px-3 text-orange-300">33.91</td><td class="px-3">A</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Supply Current rms</td><td class="formula px-3">Is_rms</td><td class="text-right px-3 text-orange-300">33.91</td><td class="px-3">A</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Thyristor Avg Current</td><td class="formula px-3">IT_avg</td><td class="text-right px-3 text-pink-300">16.95</td><td class="px-3">A</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Thyristor rms Current</td><td class="formula px-3">IT_rms</td><td class="text-right px-3 text-pink-300">23.99</td><td class="px-3">A</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Displacement PF</td><td class="formula px-3">DPF</td><td class="text-right px-3 text-purple-300">0.5090</td><td class="px-3">—</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Distortion Factor</td><td class="formula px-3">DF</td><td class="text-right px-3 text-purple-300">0.9003</td><td class="px-3">—</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Total Power Factor</td><td class="formula px-3">PF</td><td class="text-right px-3 text-red-300 font-bold">0.4582</td><td class="px-3">—</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Input Power</td><td class="formula px-3">P</td><td class="text-right px-3 text-green-300">1865</td><td class="px-3">W</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Apparent Power</td><td class="formula px-3">S</td><td class="text-right px-3 text-green-300">4069</td><td class="px-3">VA</td></tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800"><td class="py-2 px-3">Total Harmonic Distortion</td><td class="formula px-3">THD</td><td class="text-right px-3 text-red-300 font-bold">48.43</td><td class="px-3">%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Colored Badges -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="bg-blue-900/50 border border-blue-600 rounded-lg p-3 text-center">
+          <div class="text-xs text-blue-300">Firing Angle</div>
+          <div class="text-xl font-bold text-blue-200">59.35°</div>
+        </div>
+        <div class="bg-green-900/50 border border-green-600 rounded-lg p-3 text-center">
+          <div class="text-xs text-green-300">Vdc</div>
+          <div class="text-xl font-bold text-green-200">55 V</div>
+        </div>
+        <div class="bg-orange-900/50 border border-orange-600 rounded-lg p-3 text-center">
+          <div class="text-xs text-orange-300">Ia rated</div>
+          <div class="text-xl font-bold text-orange-200">33.91 A</div>
+        </div>
+        <div class="bg-purple-900/50 border border-purple-600 rounded-lg p-3 text-center">
+          <div class="text-xs text-purple-300">Power Factor</div>
+          <div class="text-xl font-bold text-purple-200">0.4582</div>
+        </div>
+        <div class="bg-red-900/50 border border-red-600 rounded-lg p-3 text-center">
+          <div class="text-xs text-red-300">THD</div>
+          <div class="text-xl font-bold text-red-200">48.43%</div>
+        </div>
+        <div class="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 text-center">
+          <div class="text-xs text-yellow-300">Input Power</div>
+          <div class="text-xl font-bold text-yellow-200">1865 W</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 2: Parameters ===== -->
+    <div id="tab2" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">System Parameters</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Input Form -->
+        <div class="lg:col-span-1 bg-gray-900 rounded-xl p-5 border border-gray-700">
+          <h3 class="text-base font-semibold text-yellow-400 mb-4">Input Parameters</h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">Vs (V rms)</label>
+              <input id="p-Vs" type="number" value="120" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">Freq (Hz)</label>
+              <input id="p-freq" type="number" value="60" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">Power (HP)</label>
+              <input id="p-HP" type="number" value="5" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">V rated (V)</label>
+              <input id="p-Vrated" type="number" value="110" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">Kb (V/rpm)</label>
+              <input id="p-Kb" type="number" value="0.055" step="0.001" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">Ra (&Omega;)</label>
+              <input id="p-Ra" type="number" value="0.5" step="0.01" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">La (H)</label>
+              <input id="p-La" type="number" value="0.01" step="0.001" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">J (kg&middot;m&sup2;)</label>
+              <input id="p-J" type="number" value="0.01" step="0.001" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="w-28 text-gray-400">N ref (rpm)</label>
+              <input id="p-Nref" type="number" value="1000" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm" />
+            </div>
+            <button id="btn-calc" class="w-full mt-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-colors">
+              Calculate All
+            </button>
+          </div>
+        </div>
+        <!-- Results Grid -->
+        <div class="lg:col-span-2">
+          <h3 class="text-base font-semibold text-yellow-400 mb-4">Calculated Results</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="results-grid">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 3: Converter Waveforms ===== -->
+    <div id="tab3" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Converter Waveforms</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+        <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <label class="text-sm text-gray-400 block mb-1">Firing Angle &alpha; (deg)</label>
+          <input type="range" id="alpha-slider" min="0" max="160" step="0.5" value="59.35" class="w-full" oninput="document.getElementById('alpha-val').textContent=this.value; updateTab3();">
+          <div class="text-center text-blue-300 font-bold text-lg"><span id="alpha-val">59.35</span>&deg;</div>
+          <div class="mt-3 space-y-1 text-xs text-gray-400" id="wf-metrics"></div>
+        </div>
+        <div class="lg:col-span-3 space-y-4">
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Chart A — AC Supply vs(t) and Rectified Output vout(t)</h3>
+            <canvas id="chart-tab3a" height="120"></canvas>
+          </div>
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Chart B — Supply Current is(t) (quasi-square wave)</h3>
+            <canvas id="chart-tab3b" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 4: Motor Simulation ===== -->
+    <div id="tab4" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Motor Simulation (Euler Integration)</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+        <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-3">Control Panel</h3>
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <button id="sim-start" class="flex-1 py-2 bg-green-700 hover:bg-green-600 rounded text-sm font-semibold transition-colors">Start</button>
+              <button id="sim-stop" class="flex-1 py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-sm font-semibold transition-colors">Stop</button>
+              <button id="sim-reset" class="flex-1 py-2 bg-red-800 hover:bg-red-700 rounded text-sm font-semibold transition-colors">Reset</button>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Load Torque TL (N&middot;m): <span id="sim-TL-val" class="text-yellow-300">5.0</span></label>
+              <input type="range" id="sim-TL" min="0" max="20" step="0.5" value="5" class="w-full" oninput="document.getElementById('sim-TL-val').textContent=parseFloat(this.value).toFixed(1);">
+            </div>
+            <div class="text-xs space-y-1 text-gray-400 mt-2" id="sim-metrics">
+              <div>Time: <span class="text-white" id="sim-t">0.000</span> s</div>
+              <div>Speed: <span class="text-green-300" id="sim-n">0</span> rpm</div>
+              <div>Current: <span class="text-orange-300" id="sim-ia">0.00</span> A</div>
+            </div>
+          </div>
+          <div class="mt-3 p-2 bg-gray-800 rounded text-xs text-gray-400">
+            <div>Equation of motion:</div>
+            <div class="formula text-blue-300">La&middot;dIa/dt = Vdc - Ra&middot;Ia - Kb&middot;&omega;</div>
+            <div class="formula text-blue-300">J&middot;d&omega;/dt = Kb&middot;Ia - TL - B&middot;&omega;</div>
+            <div class="mt-1">B = 0.002 N&middot;m&middot;s/rad</div>
+          </div>
+        </div>
+        <div class="lg:col-span-3 space-y-4">
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Speed (rpm) vs Time</h3>
+            <canvas id="chart-tab4speed" height="110"></canvas>
+          </div>
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Armature Current (A) vs Time</h3>
+            <canvas id="chart-tab4current" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 5: Fault Current ===== -->
+    <div id="tab5" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Fault Current Analysis</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-3">Parameters</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs text-gray-400">Ra (&Omega;): <span id="fault-Ra-val" class="text-yellow-300">0.5</span></label>
+              <input type="range" id="fault-Ra" min="0.1" max="5" step="0.1" value="0.5" class="w-full" oninput="document.getElementById('fault-Ra-val').textContent=parseFloat(this.value).toFixed(1); initTab5();">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">La (H): <span id="fault-La-val" class="text-yellow-300">0.010</span></label>
+              <input type="range" id="fault-La" min="0.001" max="0.1" step="0.001" value="0.01" class="w-full" oninput="document.getElementById('fault-La-val').textContent=parseFloat(this.value).toFixed(3); initTab5();">
+            </div>
+            <div class="bg-gray-800 rounded p-3 text-xs space-y-2 text-gray-300" id="fault-metrics"></div>
+            <div class="p-2 bg-blue-900/30 border border-blue-700 rounded text-xs text-blue-200">
+              <div class="font-semibold mb-1">Fault current model:</div>
+              <div class="formula">i(t) = (Vdc/Ra) &times; (1 - e<sup>-t/&tau;</sup>)</div>
+              <div class="mt-1">where &tau; = La/Ra</div>
+            </div>
+          </div>
+        </div>
+        <div class="lg:col-span-3 bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-2">Short-Circuit Fault Current Transient</h3>
+          <canvas id="chart-tab5" height="280"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 6: Protection Coordination ===== -->
+    <div id="tab6" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Protection Coordination (Log-Log)</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-3">Protection Settings</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs text-gray-400">Pickup Current Ip (A): <span id="prot-Ip-val" class="text-yellow-300">34</span></label>
+              <input type="range" id="prot-Ip" min="1" max="100" step="1" value="34" class="w-full" oninput="document.getElementById('prot-Ip-val').textContent=this.value; initTab6();">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">TMS: <span id="prot-TMS-val" class="text-yellow-300">0.50</span></label>
+              <input type="range" id="prot-TMS" min="0.1" max="2.0" step="0.1" value="0.5" class="w-full" oninput="document.getElementById('prot-TMS-val').textContent=parseFloat(this.value).toFixed(2); initTab6();">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Fuse Rating If (A): <span id="prot-If-val" class="text-yellow-300">50</span></label>
+              <input type="range" id="prot-If" min="10" max="200" step="5" value="50" class="w-full" oninput="document.getElementById('prot-If-val').textContent=this.value; initTab6();">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Fuse k: <span id="prot-k-val" class="text-yellow-300">100</span></label>
+              <input type="range" id="prot-k" min="10" max="500" step="10" value="100" class="w-full" oninput="document.getElementById('prot-k-val').textContent=this.value; initTab6();">
+            </div>
+            <div class="bg-gray-800 rounded p-2 text-xs text-gray-400 space-y-1">
+              <div class="text-yellow-300 font-semibold">Relay Curves</div>
+              <div>NI: t = TMS &times; 0.14 / ((I/Ip)^0.02 - 1)</div>
+              <div>VI: t = TMS &times; 13.5 / (I/Ip - 1)</div>
+              <div>Fuse: t = k / (I/If)&sup2;</div>
+            </div>
+          </div>
+        </div>
+        <div class="lg:col-span-3 bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-2">Time-Current Curves (Log-Log)</h3>
+          <canvas id="chart-tab6" height="280"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 7: Speed Controller ===== -->
+    <div id="tab7" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Speed Controller</h2>
+      <!-- Sub-tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="sub-tab-btn px-4 py-1.5 rounded text-sm font-semibold bg-blue-600 text-white" data-sub="sub7pid" data-group="tab7">PID Controller</button>
+        <button class="sub-tab-btn px-4 py-1.5 rounded text-sm font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700" data-sub="sub7fuzzy" data-group="tab7">Fuzzy Controller</button>
+      </div>
+      <!-- PID Sub-tab -->
+      <div id="sub7pid" class="sub-panel active" data-group="tab7">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-3">PID Gains</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="text-xs text-gray-400">Kp: <span id="pid-Kp-val" class="text-yellow-300">10.0</span></label>
+                <input type="range" id="pid-Kp" min="0.1" max="50" step="0.1" value="10" class="w-full" oninput="document.getElementById('pid-Kp-val').textContent=parseFloat(this.value).toFixed(1);">
+              </div>
+              <div>
+                <label class="text-xs text-gray-400">Ki: <span id="pid-Ki-val" class="text-yellow-300">5.0</span></label>
+                <input type="range" id="pid-Ki" min="0" max="100" step="0.5" value="5" class="w-full" oninput="document.getElementById('pid-Ki-val').textContent=parseFloat(this.value).toFixed(1);">
+              </div>
+              <div>
+                <label class="text-xs text-gray-400">Kd: <span id="pid-Kd-val" class="text-yellow-300">0.10</span></label>
+                <input type="range" id="pid-Kd" min="0" max="1" step="0.01" value="0.1" class="w-full" oninput="document.getElementById('pid-Kd-val').textContent=parseFloat(this.value).toFixed(2);">
+              </div>
+              <button id="btn-pid-run" class="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm font-semibold transition-colors">Run Simulation</button>
+              <div class="text-xs text-gray-400 space-y-1" id="pid-metrics"></div>
+            </div>
+          </div>
+          <div class="lg:col-span-3 bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Closed-Loop Speed Response (PID)</h3>
+            <canvas id="chart-tab7pid" height="270"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- Fuzzy Sub-tab -->
+      <div id="sub7fuzzy" class="sub-panel" data-group="tab7">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-3">Fuzzy Rule Table (Error × d/dt Error → Output)</h3>
+            <div class="overflow-x-auto">
+              <table class="text-xs w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th class="p-1.5 bg-gray-800 text-gray-400 border border-gray-700">e \\ de</th>
+                    <th class="p-1.5 bg-blue-900 text-blue-300 border border-gray-700">NB</th>
+                    <th class="p-1.5 bg-blue-900 text-blue-300 border border-gray-700">NM</th>
+                    <th class="p-1.5 bg-gray-700 text-gray-300 border border-gray-700">Z</th>
+                    <th class="p-1.5 bg-green-900 text-green-300 border border-gray-700">PM</th>
+                    <th class="p-1.5 bg-green-900 text-green-300 border border-gray-700">PB</th>
+                  </tr>
+                </thead>
+                <tbody id="fuzzy-table">
+                  <tr><td class="p-1.5 bg-blue-900 text-blue-300 border border-gray-700 font-bold">NB</td><td class="p-1.5 border border-gray-700 bg-gray-800">NB</td><td class="p-1.5 border border-gray-700 bg-gray-800">NB</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">Z</td></tr>
+                  <tr><td class="p-1.5 bg-blue-900 text-blue-300 border border-gray-700 font-bold">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">NB</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">Z</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td></tr>
+                  <tr><td class="p-1.5 bg-gray-700 text-gray-300 border border-gray-700 font-bold">Z</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800 text-yellow-300">Z</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td></tr>
+                  <tr><td class="p-1.5 bg-green-900 text-green-300 border border-gray-700 font-bold">PM</td><td class="p-1.5 border border-gray-700 bg-gray-800">NM</td><td class="p-1.5 border border-gray-700 bg-gray-800">Z</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td><td class="p-1.5 border border-gray-700 bg-gray-800">PB</td></tr>
+                  <tr><td class="p-1.5 bg-green-900 text-green-300 border border-gray-700 font-bold">PB</td><td class="p-1.5 border border-gray-700 bg-gray-800">Z</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td><td class="p-1.5 border border-gray-700 bg-gray-800">PM</td><td class="p-1.5 border border-gray-700 bg-gray-800">PB</td><td class="p-1.5 border border-gray-700 bg-gray-800">PB</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3 text-xs text-gray-400 space-y-1">
+              <div><span class="text-blue-400 font-semibold">Membership Functions:</span> Triangular/Gaussian sets on normalized [-1,1] universe</div>
+              <div>NB = Negative Big (&lt; -0.6), NM = Negative Medium (-0.6 to -0.2)</div>
+              <div>Z = Zero (-0.2 to 0.2), PM = Positive Medium (0.2 to 0.6)</div>
+              <div>PB = Positive Big (&gt; 0.6)</div>
+              <div class="text-yellow-300">Defuzzification: center-of-gravity method</div>
+            </div>
+          </div>
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">PID vs Fuzzy Speed Response Comparison</h3>
+            <canvas id="chart-tab7fuzzy" height="230"></canvas>
+            <button id="btn-fuzzy-run" class="w-full mt-3 py-2 bg-purple-700 hover:bg-purple-600 rounded text-sm font-semibold transition-colors">Run Comparison</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 8: Thermal & Economic ===== -->
+    <div id="tab8" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Thermal &amp; Economic Analysis</h2>
+      <!-- Sub-tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="sub-tab-btn px-4 py-1.5 rounded text-sm font-semibold bg-blue-600 text-white" data-sub="sub8thermal" data-group="tab8">Thermal Model</button>
+        <button class="sub-tab-btn px-4 py-1.5 rounded text-sm font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700" data-sub="sub8economic" data-group="tab8">Economic Analysis</button>
+      </div>
+      <!-- Thermal Sub-tab -->
+      <div id="sub8thermal" class="sub-panel active" data-group="tab8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-3">Thermal Parameters</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="text-xs text-gray-400">Rth (&deg;C/W): <span id="th-Rth-val" class="text-yellow-300">0.50</span></label>
+                <input type="range" id="th-Rth" min="0.1" max="2.0" step="0.1" value="0.5" class="w-full" oninput="document.getElementById('th-Rth-val').textContent=parseFloat(this.value).toFixed(2); initTab8Thermal();">
+              </div>
+              <div>
+                <label class="text-xs text-gray-400">Cth (J/&deg;C): <span id="th-Cth-val" class="text-yellow-300">1000</span></label>
+                <input type="range" id="th-Cth" min="100" max="5000" step="100" value="1000" class="w-full" oninput="document.getElementById('th-Cth-val').textContent=this.value; initTab8Thermal();">
+              </div>
+              <div>
+                <label class="text-xs text-gray-400">Ta (&deg;C): <span id="th-Ta-val" class="text-yellow-300">25</span></label>
+                <input type="range" id="th-Ta" min="10" max="40" step="1" value="25" class="w-full" oninput="document.getElementById('th-Ta-val').textContent=this.value; initTab8Thermal();">
+              </div>
+              <div class="bg-gray-800 rounded p-2 text-xs text-gray-400 space-y-1" id="thermal-metrics"></div>
+              <div class="p-2 bg-orange-900/30 border border-orange-700 rounded text-xs text-orange-200">
+                <div class="font-semibold">T(t) = Ta + &Delta;T_ss &times; (1 - e<sup>-t/&tau;_th</sup>)</div>
+                <div>&Delta;T_ss = Ploss &times; Rth</div>
+                <div>&tau;_th = Rth &times; Cth</div>
+                <div>Ploss = Ia&sup2; &times; Ra</div>
+              </div>
+            </div>
+          </div>
+          <div class="lg:col-span-3 bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Motor Temperature Rise vs Time</h3>
+            <canvas id="chart-tab8thermal" height="280"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- Economic Sub-tab -->
+      <div id="sub8economic" class="sub-panel" data-group="tab8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-3">Economic Parameters</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="text-xs text-gray-400">Tariff ($/kWh)</label>
+                <input id="econ-tariff" type="number" value="0.12" step="0.01" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm mt-1" oninput="initTab8Economic();">
+              </div>
+              <div>
+                <label class="text-xs text-gray-400">Hours/day</label>
+                <input id="econ-hours" type="number" value="8" min="1" max="24" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm mt-1" oninput="initTab8Economic();">
+              </div>
+              <div>
+                <label class="text-xs text-gray-400">Days/year</label>
+                <input id="econ-days" type="number" value="250" min="1" max="365" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm mt-1" oninput="initTab8Economic();">
+              </div>
+              <div class="bg-gray-800 rounded p-2 text-xs space-y-1 text-gray-300" id="econ-metrics"></div>
+            </div>
+          </div>
+          <div class="lg:col-span-3 bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-semibold text-yellow-400 mb-2">Annual Energy Cost by Load Level</h3>
+            <canvas id="chart-tab8economic" height="280"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 9: Harmonics & Power Quality ===== -->
+    <div id="tab9" class="tab-panel">
+      <h2 class="text-2xl font-bold text-blue-400 mb-4">Harmonics &amp; Power Quality</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-3">Power Quality Metrics</h3>
+          <div class="space-y-2 text-sm" id="pq-metrics"></div>
+          <div class="mt-4 p-2 bg-gray-800 rounded text-xs text-gray-400 space-y-1">
+            <div class="text-yellow-300 font-semibold">IEC 61000-3-2 Class A Limits</div>
+            <div>h=3: 2.30 A &nbsp; h=5: 1.14 A</div>
+            <div>h=7: 0.77 A &nbsp; h=9: 0.40 A</div>
+            <div>h=11: 0.33 A &nbsp; h=13: 0.21 A</div>
+            <div>h&ge;15 odd: 0.15&times;15/h A</div>
+          </div>
+        </div>
+        <div class="lg:col-span-3 bg-gray-900 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-yellow-400 mb-2">Harmonic Current Spectrum vs IEC 61000-3-2 Class A Limits</h3>
+          <canvas id="chart-tab9" height="280"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-gray-700 text-center py-3 text-sm text-gray-500">
+    DC Motor Speed Control | Full Bridge Converter Analysis
+  </footer>
+
+  <script>
+    // =====================================================================
+    // GLOBAL STATE
+    // =====================================================================
+    const state = {
+      Vs: 120, freq: 60, HP: 5, Vrated: 110,
+      Kb: 0.055, Ra: 0.5, La: 0.01, J: 0.01,
+      N_ref: 1000,
+      results: {}
+    };
+
+    const charts = {};
+
+    // =====================================================================
+    // CALCULATE ALL RESULTS
+    // =====================================================================
+    function calculate() {
+      const s = state;
+      const Vm = s.Vs * Math.sqrt(2);
+      const Vm2 = 2 * Vm / Math.PI;
+      const E = s.Kb * s.N_ref;
+      const ratio = E / Vm2;
+      const alpha_rad = Math.acos(Math.max(-1, Math.min(1, ratio)));
+      const alpha_deg = alpha_rad * 180 / Math.PI;
+      const Vdc = Vm2 * Math.cos(alpha_rad);
+      const Ia = s.HP * 746 / s.Vrated;
+      const Is_rms = Ia;
+      const IT_avg = Ia / 2;
+      const IT_rms = Ia / Math.sqrt(2);
+      const DPF = Math.cos(alpha_rad);
+      const I1_rms = (4 * Ia) / (Math.PI * Math.sqrt(2));
+      const DF = I1_rms / Is_rms;
+      const PF = DPF * DF;
+      const S = s.Vs * Is_rms;
+      const P = Vdc * Ia;
+      const Q = Math.sqrt(Math.max(0, S * S - P * P));
+      const THD = Math.sqrt(Math.max(0, Is_rms * Is_rms - I1_rms * I1_rms)) / I1_rms * 100;
+      s.results = { Vm, Vm2, E, alpha_rad, alpha_deg, Vdc, Ia, Is_rms, IT_avg, IT_rms, DPF, I1_rms, DF, PF, S, P, Q, THD };
+
+      document.getElementById('hdr-results').textContent =
+        `α=${alpha_deg.toFixed(1)}° | Vdc=${Vdc.toFixed(1)}V | Ia=${Ia.toFixed(1)}A | PF=${PF.toFixed(4)}`;
+    }
+
+    // =====================================================================
+    // TAB SWITCHING
+    // =====================================================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        b.classList.add('text-gray-400');
+      });
+      const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+        activeBtn.classList.remove('text-gray-400');
+      }
+      const tabInits = {
+        tab2: initTab2, tab3: initTab3, tab4: initTab4,
+        tab5: initTab5, tab6: initTab6, tab7: initTab7,
+        tab8: initTab8, tab9: initTab9
+      };
+      if (tabInits[tabId]) tabInits[tabId]();
+    }
+
+    function switchSubTab(subId, group) {
+      document.querySelectorAll(`.sub-panel[data-group="${group}"]`).forEach(p => p.classList.remove('active'));
+      document.getElementById(subId).classList.add('active');
+      document.querySelectorAll(`.sub-tab-btn[data-group="${group}"]`).forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        b.classList.add('text-gray-400', 'bg-gray-800');
+      });
+      const activeBtn = document.querySelector(`.sub-tab-btn[data-sub="${subId}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+        activeBtn.classList.remove('text-gray-400');
+      }
+      if (subId === 'sub8thermal') initTab8Thermal();
+      else if (subId === 'sub8economic') initTab8Economic();
+      else if (subId === 'sub7pid') {}
+      else if (subId === 'sub7fuzzy') {}
+    }
+
+    // =====================================================================
+    // TAB 2: PARAMETERS
+    // =====================================================================
+    function initTab2() {
+      updateResultsGrid();
+    }
+
+    function updateResultsGrid() {
+      const r = state.results;
+      const items = [
+        { label: 'Peak Voltage Vm', val: r.Vm.toFixed(2), unit: 'V', color: 'blue' },
+        { label: 'Avg Rectified Vm2', val: r.Vm2.toFixed(2), unit: 'V', color: 'blue' },
+        { label: 'Back-EMF E', val: r.E.toFixed(2), unit: 'V', color: 'green' },
+        { label: 'DC Voltage Vdc', val: r.Vdc.toFixed(2), unit: 'V', color: 'green' },
+        { label: 'Firing Angle α', val: r.alpha_deg.toFixed(2), unit: '°', color: 'yellow' },
+        { label: 'Armature Current Ia', val: r.Ia.toFixed(2), unit: 'A', color: 'orange' },
+        { label: 'Supply Is_rms', val: r.Is_rms.toFixed(2), unit: 'A', color: 'orange' },
+        { label: 'Thyristor IT_avg', val: r.IT_avg.toFixed(2), unit: 'A', color: 'pink' },
+        { label: 'Thyristor IT_rms', val: r.IT_rms.toFixed(2), unit: 'A', color: 'pink' },
+        { label: 'Displacement PF', val: r.DPF.toFixed(4), unit: '', color: 'purple' },
+        { label: 'Distortion Factor', val: r.DF.toFixed(4), unit: '', color: 'purple' },
+        { label: 'Total PF', val: r.PF.toFixed(4), unit: '', color: 'red' },
+        { label: 'Input Power P', val: r.P.toFixed(1), unit: 'W', color: 'green' },
+        { label: 'Reactive Power Q', val: r.Q.toFixed(1), unit: 'VAR', color: 'teal' },
+        { label: 'Apparent Power S', val: r.S.toFixed(1), unit: 'VA', color: 'green' },
+        { label: 'THD', val: r.THD.toFixed(2), unit: '%', color: 'red' }
+      ];
+      const colorMap = {
+        blue: 'border-blue-500 text-blue-300', green: 'border-green-500 text-green-300',
+        yellow: 'border-yellow-500 text-yellow-300', orange: 'border-orange-500 text-orange-300',
+        pink: 'border-pink-500 text-pink-300', purple: 'border-purple-500 text-purple-300',
+        red: 'border-red-500 text-red-300', teal: 'border-teal-500 text-teal-300'
+      };
+      const grid = document.getElementById('results-grid');
+      grid.innerHTML = items.map(it => {
+        const cc = colorMap[it.color] || 'border-gray-500 text-gray-300';
+        return `<div class="card-result border-l-4 ${cc.split(' ')[0]}">
+          <div class="text-xs text-gray-400">${it.label}</div>
+          <div class="text-lg font-bold ${cc.split(' ')[1]}">${it.val} <span class="text-xs text-gray-400">${it.unit}</span></div>
+        </div>`;
+      }).join('');
+    }
+
+    // =====================================================================
+    // TAB 3: WAVEFORMS
+    // =====================================================================
+    function generateWaveformData(alpha_rad) {
+      const N = 400;
+      const Vm = state.results.Vm;
+      const Ia = state.results.Ia;
+      const labels = [], vsData = [], voutData = [], isData = [];
+      const firingLineData = [];
+
+      for (let i = 0; i < N; i++) {
+        const theta = (4 * Math.PI * i) / (N - 1);
+        const theta_mod = theta % (2 * Math.PI);
+        labels.push((theta / Math.PI).toFixed(2));
+        const vs = Vm * Math.sin(theta);
+        vsData.push(parseFloat(vs.toFixed(2)));
+        const inPosGroup = (theta_mod >= alpha_rad && theta_mod <= Math.PI + alpha_rad);
+        voutData.push(parseFloat((inPosGroup ? vs : -vs).toFixed(2)));
+        isData.push(parseFloat((inPosGroup ? Ia : -Ia).toFixed(2)));
+        firingLineData.push(null);
+      }
+      // Add near-vertical firing angle markers (each cycle has two: at α and π+α)
+      for (let cycle = 0; cycle < 2; cycle++) {
+        const angles = [alpha_rad + cycle * 2 * Math.PI, Math.PI + alpha_rad + cycle * 2 * Math.PI];
+        for (const ang of angles) {
+          const idx = Math.round(ang / (4 * Math.PI) * (N - 1));
+          if (idx >= 1 && idx < N - 1) {
+            firingLineData[idx - 1] = -Vm * 1.05;
+            firingLineData[idx] = Vm * 1.05;
+          }
+        }
+      }
+      return { labels, vsData, voutData, isData, firingLineData, Vm };
+    }
+
+    function initTab3() {
+      const alpha_deg = parseFloat(document.getElementById('alpha-slider').value);
+      updateTab3(alpha_deg);
+    }
+
+    function updateTab3(alpha_deg_input) {
+      const alpha_deg = (alpha_deg_input !== undefined)
+        ? alpha_deg_input
+        : parseFloat(document.getElementById('alpha-slider').value);
+      const alpha_rad = alpha_deg * Math.PI / 180;
+      const { labels, vsData, voutData, isData, firingLineData, Vm } = generateWaveformData(alpha_rad);
+
+      const Vdc_cur = (2 * Vm / Math.PI) * Math.cos(alpha_rad);
+      const Ia = state.results.Ia;
+      const I1 = (4 * Ia) / (Math.PI * Math.sqrt(2));
+      const DPF = Math.cos(alpha_rad);
+      const DF = I1 / Ia;
+      const PF_cur = DPF * DF;
+      const THD_cur = Math.sqrt(Math.max(0, Ia * Ia - I1 * I1)) / I1 * 100;
+
+      const mEl = document.getElementById('wf-metrics');
+      if (mEl) mEl.innerHTML = `
+        <div>Vdc = <span class="text-green-300">${Vdc_cur.toFixed(2)} V</span></div>
+        <div>DPF = <span class="text-blue-300">${DPF.toFixed(4)}</span></div>
+        <div>PF = <span class="text-purple-300">${PF_cur.toFixed(4)}</span></div>
+        <div>THD = <span class="text-red-300">${THD_cur.toFixed(2)}%</span></div>
+        <div>I1_rms = <span class="text-orange-300">${I1.toFixed(2)} A</span></div>`;
+
+      const chartDefaults = {
+        responsive: true,
+        animation: false,
+        plugins: { legend: { labels: { color: '#e5e7eb', font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#9ca3af', maxTicksLimit: 9 }, grid: { color: '#374151' }, title: { display: true, text: 'θ / π (rad)', color: '#9ca3af' } },
+          y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+        }
+      };
+
+      // Chart A
+      if (charts.tab3a) { charts.tab3a.destroy(); delete charts.tab3a; }
+      const ctxA = document.getElementById('chart-tab3a').getContext('2d');
+      charts.tab3a = new Chart(ctxA, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'vs(t)', data: vsData, borderColor: '#60a5fa', fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0 },
+            { label: 'vout(t)', data: voutData, borderColor: '#f59e0b', fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0 },
+            { label: 'Firing α', data: firingLineData, borderColor: '#ef4444', fill: false, pointRadius: 0, borderWidth: 1.5, borderDash: [4, 3], tension: 0 }
+          ]
+        },
+        options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, title: { display: true, text: 'Voltage (V)', color: '#9ca3af' } } } }
+      });
+
+      // Chart B
+      if (charts.tab3b) { charts.tab3b.destroy(); delete charts.tab3b; }
+      const ctxB = document.getElementById('chart-tab3b').getContext('2d');
+      charts.tab3b = new Chart(ctxB, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'is(t)', data: isData, borderColor: '#34d399', fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0 }
+          ]
+        },
+        options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, title: { display: true, text: 'Current (A)', color: '#9ca3af' } } } }
+      });
+    }
+
+    // =====================================================================
+    // TAB 4: MOTOR SIMULATION
+    // =====================================================================
+    const motorSim = { running: false, t: 0, omega: 0, Ia_sim: 0, timeArr: [], speedArr: [], currentArr: [], intervalId: null };
+
+    function initTab4() {
+      if (!charts.tab4speed) {
+        const ctxS = document.getElementById('chart-tab4speed').getContext('2d');
+        charts.tab4speed = new Chart(ctxS, {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Speed (rpm)', data: [], borderColor: '#34d399', fill: false, pointRadius: 0, borderWidth: 2, tension: 0 }] },
+          options: {
+            responsive: true, animation: false,
+            plugins: { legend: { labels: { color: '#e5e7eb' } } },
+            scales: {
+              x: { ticks: { color: '#9ca3af', maxTicksLimit: 10 }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } },
+              y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Speed (rpm)', color: '#9ca3af' } }
+            }
+          }
+        });
+      }
+      if (!charts.tab4current) {
+        const ctxC = document.getElementById('chart-tab4current').getContext('2d');
+        charts.tab4current = new Chart(ctxC, {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Armature Current (A)', data: [], borderColor: '#f59e0b', fill: false, pointRadius: 0, borderWidth: 2, tension: 0 }] },
+          options: {
+            responsive: true, animation: false,
+            plugins: { legend: { labels: { color: '#e5e7eb' } } },
+            scales: {
+              x: { ticks: { color: '#9ca3af', maxTicksLimit: 10 }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } },
+              y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Current (A)', color: '#9ca3af' } }
+            }
+          }
+        });
+      }
+    }
+
+    function motorSimReset() {
+      if (motorSim.intervalId) { clearInterval(motorSim.intervalId); motorSim.intervalId = null; }
+      motorSim.running = false;
+      motorSim.t = 0; motorSim.omega = 0; motorSim.Ia_sim = 0;
+      motorSim.timeArr = []; motorSim.speedArr = []; motorSim.currentArr = [];
+      if (charts.tab4speed) { charts.tab4speed.data.labels = []; charts.tab4speed.data.datasets[0].data = []; charts.tab4speed.update('none'); }
+      if (charts.tab4current) { charts.tab4current.data.labels = []; charts.tab4current.data.datasets[0].data = []; charts.tab4current.update('none'); }
+      document.getElementById('sim-t').textContent = '0.000';
+      document.getElementById('sim-n').textContent = '0';
+      document.getElementById('sim-ia').textContent = '0.00';
+    }
+
+    function motorSimTick() {
+      const dt = 0.0001;
+      const tickDuration = 0.1;
+      const steps = Math.round(tickDuration / dt);
+      const Kb_SI = state.Kb * 60 / (2 * Math.PI);
+      const B = 0.002;
+      const TL = parseFloat(document.getElementById('sim-TL').value) || 0;
+      const Vdc = state.results.Vdc;
+      const sampleEvery = 10;
+
+      for (let i = 0; i < steps; i++) {
+        const dIa = (Vdc - state.Ra * motorSim.Ia_sim - Kb_SI * motorSim.omega) / state.La;
+        const dOmega = (Kb_SI * motorSim.Ia_sim - TL - B * motorSim.omega) / state.J;
+        motorSim.Ia_sim += dIa * dt;
+        motorSim.omega += dOmega * dt;
+        if (motorSim.Ia_sim < 0) motorSim.Ia_sim = 0;
+        if (motorSim.omega < 0) motorSim.omega = 0;
+        motorSim.t += dt;
+        if (i % sampleEvery === 0) {
+          motorSim.timeArr.push(parseFloat(motorSim.t.toFixed(3)));
+          motorSim.speedArr.push(parseFloat((motorSim.omega * 60 / (2 * Math.PI)).toFixed(1)));
+          motorSim.currentArr.push(parseFloat(motorSim.Ia_sim.toFixed(2)));
+        }
+      }
+      const MAX_PTS = 2000;
+      if (motorSim.timeArr.length > MAX_PTS) {
+        motorSim.timeArr = motorSim.timeArr.slice(-MAX_PTS);
+        motorSim.speedArr = motorSim.speedArr.slice(-MAX_PTS);
+        motorSim.currentArr = motorSim.currentArr.slice(-MAX_PTS);
+      }
+      if (charts.tab4speed) {
+        charts.tab4speed.data.labels = motorSim.timeArr;
+        charts.tab4speed.data.datasets[0].data = motorSim.speedArr;
+        charts.tab4speed.update('none');
+      }
+      if (charts.tab4current) {
+        charts.tab4current.data.labels = motorSim.timeArr;
+        charts.tab4current.data.datasets[0].data = motorSim.currentArr;
+        charts.tab4current.update('none');
+      }
+      const rpm = motorSim.omega * 60 / (2 * Math.PI);
+      document.getElementById('sim-t').textContent = motorSim.t.toFixed(3);
+      document.getElementById('sim-n').textContent = rpm.toFixed(0);
+      document.getElementById('sim-ia').textContent = motorSim.Ia_sim.toFixed(2);
+    }
+
+    // =====================================================================
+    // TAB 5: FAULT CURRENT
+    // =====================================================================
+    function initTab5() {
+      const Ra = parseFloat(document.getElementById('fault-Ra').value);
+      const La = parseFloat(document.getElementById('fault-La').value);
+      const Vdc = state.results.Vdc;
+      const tau = La / Ra;
+      const Ipeak = Vdc / Ra;
+      const t_end = Math.min(5 * tau, 0.5);
+      const N = 300;
+      const tData = [], iData = [];
+      for (let i = 0; i <= N; i++) {
+        const t = (t_end * i) / N;
+        tData.push(parseFloat(t.toFixed(4)));
+        iData.push(parseFloat((Ipeak * (1 - Math.exp(-t / tau))).toFixed(2)));
+      }
+      const metrics = document.getElementById('fault-metrics');
+      if (metrics) metrics.innerHTML = `
+        <div class="text-yellow-300 font-semibold">Fault Parameters</div>
+        <div>Vdc = ${Vdc.toFixed(2)} V</div>
+        <div>Ra = ${Ra.toFixed(2)} Ω</div>
+        <div>La = ${La.toFixed(4)} H</div>
+        <div>τ = La/Ra = ${(tau * 1000).toFixed(2)} ms</div>
+        <div class="text-red-300 font-semibold">Peak Current = ${Ipeak.toFixed(2)} A</div>
+        <div>63% of peak at t=τ: ${(Ipeak * 0.632).toFixed(2)} A</div>`;
+
+      if (charts.tab5) { charts.tab5.destroy(); delete charts.tab5; }
+      const ctx = document.getElementById('chart-tab5').getContext('2d');
+      charts.tab5 = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: tData,
+          datasets: [
+            { label: 'Fault Current i(t)', data: iData, borderColor: '#f87171', fill: true, backgroundColor: 'rgba(248,113,113,0.1)', pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: `Peak = ${Ipeak.toFixed(1)} A`, data: tData.map(() => Ipeak), borderColor: '#fbbf24', borderDash: [6, 4], fill: false, pointRadius: 0, borderWidth: 1.5 }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af', maxTicksLimit: 8 }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Current (A)', color: '#9ca3af' }, min: 0 }
+          }
+        }
+      });
+    }
+
+    // =====================================================================
+    // TAB 6: PROTECTION COORDINATION
+    // =====================================================================
+    function initTab6() {
+      const Ip = parseFloat(document.getElementById('prot-Ip').value);
+      const TMS = parseFloat(document.getElementById('prot-TMS').value);
+      const If = parseFloat(document.getElementById('prot-If').value);
+      const kFuse = parseFloat(document.getElementById('prot-k').value);
+
+      const currents = [];
+      for (let i = 0; i <= 120; i++) {
+        currents.push(Math.pow(10, i * 3 / 120));
+      }
+
+      const niPts = [], viPts = [], fusePts = [];
+      for (const I of currents) {
+        const ratio = I / Ip;
+        const ni_d = Math.pow(ratio, 0.02) - 1;
+        niPts.push({ x: I, y: ni_d > 1e-6 ? Math.min(TMS * 0.14 / ni_d, 1000) : null });
+        const vi_d = ratio - 1;
+        viPts.push({ x: I, y: vi_d > 1e-6 ? Math.min(TMS * 13.5 / vi_d, 1000) : null });
+        const fr = I / If;
+        fusePts.push({ x: I, y: Math.min(kFuse / (fr * fr), 1000) });
+      }
+
+      if (charts.tab6) { charts.tab6.destroy(); delete charts.tab6; }
+      const ctx = document.getElementById('chart-tab6').getContext('2d');
+      charts.tab6 = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            { label: 'Normal Inverse (IEC)', data: niPts.filter(d => d.y !== null), borderColor: '#60a5fa', backgroundColor: 'transparent', showLine: true, pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: 'Very Inverse (IEC)', data: viPts.filter(d => d.y !== null), borderColor: '#f59e0b', backgroundColor: 'transparent', showLine: true, pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: 'Fuse Melting Curve', data: fusePts, borderColor: '#f87171', backgroundColor: 'transparent', showLine: true, pointRadius: 0, borderWidth: 2, tension: 0 }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { type: 'logarithmic', min: 1, max: 1000, ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Current (A)', color: '#9ca3af' } },
+            y: { type: 'logarithmic', min: 0.01, max: 1000, ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } }
+          }
+        }
+      });
+    }
+
+    // =====================================================================
+    // TAB 7: SPEED CONTROLLER (PID + Fuzzy)
+    // =====================================================================
+    function initTab7() {
+      runPIDSimulation();
+    }
+
+    function runPIDSimulation() {
+      const Kp = parseFloat(document.getElementById('pid-Kp').value);
+      const Ki = parseFloat(document.getElementById('pid-Ki').value);
+      const Kd = parseFloat(document.getElementById('pid-Kd').value);
+      const N_ref = state.N_ref;
+      const omega_ref = N_ref * 2 * Math.PI / 60;
+      const Kb_SI = state.Kb * 60 / (2 * Math.PI);
+      const B = 0.002;
+      const Vm_peak = state.results.Vm;
+      const dt = 0.001;
+      const T_sim = 3.0;
+      const steps = Math.round(T_sim / dt);
+      let omega = 0, Ia_pid = 0, integral = 0, prev_e = 0;
+      const tArr = [], nArr = [];
+      const sampleEvery = 5;
+      let riseTime = null, overshoot = 0, ss_rpm = 0;
+
+      for (let i = 0; i <= steps; i++) {
+        const rpm = omega * 60 / (2 * Math.PI);
+        if (i % sampleEvery === 0) {
+          tArr.push(parseFloat((i * dt).toFixed(3)));
+          nArr.push(parseFloat(rpm.toFixed(1)));
+        }
+        const e = omega_ref - omega;
+        integral += e * dt;
+        const derivative = (e - prev_e) / dt;
+        const u = Kp * e + Ki * integral + Kd * derivative;
+        const Vdc_cmd = Math.max(0, Math.min(Vm_peak, u));
+        prev_e = e;
+        const dIa = (Vdc_cmd - state.Ra * Ia_pid - Kb_SI * omega) / state.La;
+        const dOmega = (Kb_SI * Ia_pid - B * omega) / state.J;
+        Ia_pid += dIa * dt;
+        omega += dOmega * dt;
+        if (Ia_pid < 0) Ia_pid = 0;
+        if (omega < 0) omega = 0;
+        if (riseTime === null && rpm >= 0.9 * N_ref) riseTime = i * dt;
+      }
+      ss_rpm = omega * 60 / (2 * Math.PI);
+      overshoot = Math.max(0, (Math.max(...nArr) - N_ref) / N_ref * 100);
+
+      const metricsEl = document.getElementById('pid-metrics');
+      if (metricsEl) metricsEl.innerHTML = `
+        <div>Rise time (90%): <span class="text-green-300">${riseTime !== null ? riseTime.toFixed(3) + ' s' : 'N/A'}</span></div>
+        <div>Overshoot: <span class="text-yellow-300">${overshoot.toFixed(1)}%</span></div>
+        <div>Steady-state: <span class="text-blue-300">${ss_rpm.toFixed(1)} rpm</span></div>`;
+
+      if (charts.tab7pid) { charts.tab7pid.destroy(); delete charts.tab7pid; }
+      const ctx = document.getElementById('chart-tab7pid').getContext('2d');
+      charts.tab7pid = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: tArr,
+          datasets: [
+            { label: 'Motor Speed (rpm)', data: nArr, borderColor: '#34d399', fill: false, pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: `Reference (${N_ref} rpm)`, data: tArr.map(() => N_ref), borderColor: '#f59e0b', borderDash: [6, 4], fill: false, pointRadius: 0, borderWidth: 1.5 }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af', maxTicksLimit: 10 }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Speed (rpm)', color: '#9ca3af' }, min: 0 }
+          }
+        }
+      });
+    }
+
+    function fuzzyInfer(e, de, omega_ref) {
+      const en = Math.max(-1, Math.min(1, e / omega_ref));
+      const den = Math.max(-1, Math.min(1, de / (omega_ref * 5)));
+      const out = 0.65 * en + 0.35 * den;
+      return out;
+    }
+
+    function runFuzzyComparison() {
+      const N_ref = state.N_ref;
+      const omega_ref = N_ref * 2 * Math.PI / 60;
+      const Kb_SI = state.Kb * 60 / (2 * Math.PI);
+      const B = 0.002;
+      const Vm_peak = state.results.Vm;
+      const dt = 0.001;
+      const T_sim = 3.0;
+      const steps = Math.round(T_sim / dt);
+      const sampleEvery = 5;
+
+      // PID with default gains
+      let omega_p = 0, Ia_p = 0, int_p = 0, prev_e_p = 0;
+      const tArr = [], nPID = [], nFuzzy = [];
+
+      // Fuzzy
+      let omega_f = 0, Ia_f = 0, prev_e_f = 0;
+
+      for (let i = 0; i <= steps; i++) {
+        if (i % sampleEvery === 0) {
+          tArr.push(parseFloat((i * dt).toFixed(3)));
+          nPID.push(parseFloat((omega_p * 60 / (2 * Math.PI)).toFixed(1)));
+          nFuzzy.push(parseFloat((omega_f * 60 / (2 * Math.PI)).toFixed(1)));
+        }
+        // PID
+        const e_p = omega_ref - omega_p;
+        int_p += e_p * dt;
+        const deriv_p = (e_p - prev_e_p) / dt;
+        const u_p = 10 * e_p + 5 * int_p + 0.1 * deriv_p;
+        const Vdc_p = Math.max(0, Math.min(Vm_peak, u_p));
+        prev_e_p = e_p;
+        const dIa_p = (Vdc_p - state.Ra * Ia_p - Kb_SI * omega_p) / state.La;
+        const dOmega_p = (Kb_SI * Ia_p - B * omega_p) / state.J;
+        Ia_p += dIa_p * dt;
+        omega_p += dOmega_p * dt;
+        if (Ia_p < 0) Ia_p = 0;
+
+        // Fuzzy
+        const e_f = omega_ref - omega_f;
+        const de_f = (e_f - prev_e_f) / dt;
+        const fuzzyOut = fuzzyInfer(e_f, de_f, omega_ref);
+        const Vdc_f = Math.max(0, Math.min(Vm_peak, (fuzzyOut + 0.5) * Vm_peak));
+        prev_e_f = e_f;
+        const dIa_f = (Vdc_f - state.Ra * Ia_f - Kb_SI * omega_f) / state.La;
+        const dOmega_f = (Kb_SI * Ia_f - B * omega_f) / state.J;
+        Ia_f += dIa_f * dt;
+        omega_f += dOmega_f * dt;
+        if (Ia_f < 0) Ia_f = 0;
+        if (omega_f < 0) omega_f = 0;
+        if (omega_p < 0) omega_p = 0;
+      }
+
+      if (charts.tab7fuzzy) { charts.tab7fuzzy.destroy(); delete charts.tab7fuzzy; }
+      const ctx = document.getElementById('chart-tab7fuzzy').getContext('2d');
+      charts.tab7fuzzy = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: tArr,
+          datasets: [
+            { label: 'PID Controller', data: nPID, borderColor: '#60a5fa', fill: false, pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: 'Fuzzy Controller', data: nFuzzy, borderColor: '#a78bfa', fill: false, pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: `Ref ${N_ref} rpm`, data: tArr.map(() => N_ref), borderColor: '#fbbf24', borderDash: [5, 4], fill: false, pointRadius: 0, borderWidth: 1.5 }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af', maxTicksLimit: 8 }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Speed (rpm)', color: '#9ca3af' }, min: 0 }
+          }
+        }
+      });
+    }
+
+    // =====================================================================
+    // TAB 8: THERMAL & ECONOMIC
+    // =====================================================================
+    function initTab8() {
+      initTab8Thermal();
+    }
+
+    function initTab8Thermal() {
+      const Rth = parseFloat(document.getElementById('th-Rth').value);
+      const Cth = parseFloat(document.getElementById('th-Cth').value);
+      const Ta = parseFloat(document.getElementById('th-Ta').value);
+      const Ia = state.results.Ia;
+      const Ploss = Ia * Ia * state.Ra;
+      const dT_ss = Ploss * Rth;
+      const tau_th = Rth * Cth;
+      const T_ss = Ta + dT_ss;
+      const t_end = 5 * tau_th;
+      const N = 300;
+      const tData = [], TData = [];
+      for (let i = 0; i <= N; i++) {
+        const t = (t_end * i) / N;
+        tData.push(parseFloat(t.toFixed(1)));
+        TData.push(parseFloat((Ta + dT_ss * (1 - Math.exp(-t / tau_th))).toFixed(2)));
+      }
+      const mEl = document.getElementById('thermal-metrics');
+      if (mEl) mEl.innerHTML = `
+        <div class="text-yellow-300 font-semibold">Thermal Analysis</div>
+        <div>Ploss = Ia²·Ra = ${Ploss.toFixed(1)} W</div>
+        <div>ΔT_ss = Ploss·Rth = ${dT_ss.toFixed(1)} °C</div>
+        <div>τ_th = Rth·Cth = ${tau_th.toFixed(0)} s</div>
+        <div class="text-red-300 font-semibold">T_ss = ${T_ss.toFixed(1)} °C</div>`;
+
+      if (charts.tab8thermal) { charts.tab8thermal.destroy(); delete charts.tab8thermal; }
+      const ctx = document.getElementById('chart-tab8thermal').getContext('2d');
+      charts.tab8thermal = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: tData,
+          datasets: [
+            { label: 'Motor Temperature (°C)', data: TData, borderColor: '#f97316', fill: true, backgroundColor: 'rgba(249,115,22,0.1)', pointRadius: 0, borderWidth: 2, tension: 0 },
+            { label: `Steady-State = ${T_ss.toFixed(1)}°C`, data: tData.map(() => T_ss), borderColor: '#ef4444', borderDash: [6, 4], fill: false, pointRadius: 0, borderWidth: 1.5 },
+            { label: `Ambient Ta = ${Ta}°C`, data: tData.map(() => Ta), borderColor: '#60a5fa', borderDash: [4, 4], fill: false, pointRadius: 0, borderWidth: 1 }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af', maxTicksLimit: 8 }, grid: { color: '#374151' }, title: { display: true, text: 'Time (s)', color: '#9ca3af' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Temperature (°C)', color: '#9ca3af' } }
+          }
+        }
+      });
+    }
+
+    function initTab8Economic() {
+      const tariff = parseFloat(document.getElementById('econ-tariff').value) || 0.12;
+      const hours = parseFloat(document.getElementById('econ-hours').value) || 8;
+      const days = parseFloat(document.getElementById('econ-days').value) || 250;
+      const P_rated = state.HP * 746;
+      const annualHours = hours * days;
+      const loadLevels = [0.25, 0.50, 0.75, 1.00];
+      const labels = ['25% Load', '50% Load', '75% Load', '100% Load'];
+      const costs = loadLevels.map(lf => {
+        const P_load = P_rated * lf;
+        const kWh = P_load / 1000 * annualHours;
+        return parseFloat((kWh * tariff).toFixed(2));
+      });
+      const energies = loadLevels.map(lf => parseFloat(((P_rated * lf / 1000) * annualHours).toFixed(1)));
+      const totalCost = costs.reduce((a, b) => a + b, 0);
+
+      const mEl = document.getElementById('econ-metrics');
+      if (mEl) mEl.innerHTML = `
+        <div class="text-yellow-300 font-semibold">Economic Summary</div>
+        <div>Rated Power: ${P_rated} W</div>
+        <div>Annual hours: ${annualHours}</div>
+        <div>Energy @ 100%: ${energies[3]} kWh/yr</div>
+        <div>Cost @ 100%: $${costs[3].toFixed(0)}/yr</div>
+        <div class="text-green-300 font-semibold">Sum of all loads: $${totalCost.toFixed(0)}/yr</div>`;
+
+      if (charts.tab8economic) { charts.tab8economic.destroy(); delete charts.tab8economic; }
+      const ctx = document.getElementById('chart-tab8economic').getContext('2d');
+      charts.tab8economic = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Annual Energy Cost ($)', data: costs, backgroundColor: ['#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa'], borderColor: ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6'], borderWidth: 1 }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+            y: { ticks: { color: '#9ca3af', callback: v => '$' + v }, grid: { color: '#374151' }, title: { display: true, text: 'Annual Cost ($)', color: '#9ca3af' } }
+          }
+        }
+      });
+    }
+
+    // =====================================================================
+    // TAB 9: HARMONICS & POWER QUALITY
+    // =====================================================================
+    function initTab9() {
+      const r = state.results;
+      const Ia = r.Ia;
+      const harmonics = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
+      const specRms = harmonics.map(h => (4 * Ia) / (h * Math.PI * Math.sqrt(2)));
+      const iecLimits = { 1: null, 3: 2.30, 5: 1.14, 7: 0.77, 9: 0.40, 11: 0.33, 13: 0.21, 15: 0.15, 17: 0.15 * 15 / 17, 19: 0.15 * 15 / 19 };
+      const limitData = harmonics.map(h => iecLimits[h] !== undefined ? iecLimits[h] : null);
+      const labels = harmonics.map(h => `h=${h}`);
+
+      // Calculate PQ metrics
+      const I1_rms = specRms[0];
+      const Is_rms_calc = Math.sqrt(specRms.reduce((s, v) => s + v * v, 0));
+      const THD_calc = Math.sqrt(Math.max(0, Is_rms_calc * Is_rms_calc - I1_rms * I1_rms)) / I1_rms * 100;
+      const DPF = r.DPF;
+      const DF_calc = I1_rms / Is_rms_calc;
+      const PF_calc = DPF * DF_calc;
+
+      const pqEl = document.getElementById('pq-metrics');
+      if (pqEl) pqEl.innerHTML = `
+        <div class="card-result border-l-4 border-blue-500 mb-2">
+          <div class="text-xs text-gray-400">Fundamental I1_rms</div>
+          <div class="text-lg font-bold text-blue-300">${I1_rms.toFixed(2)} A</div>
+        </div>
+        <div class="card-result border-l-4 border-orange-500 mb-2">
+          <div class="text-xs text-gray-400">Total Is_rms (from spectrum)</div>
+          <div class="text-lg font-bold text-orange-300">${Is_rms_calc.toFixed(2)} A</div>
+        </div>
+        <div class="card-result border-l-4 border-red-500 mb-2">
+          <div class="text-xs text-gray-400">THD</div>
+          <div class="text-lg font-bold text-red-300">${THD_calc.toFixed(2)}%</div>
+        </div>
+        <div class="card-result border-l-4 border-yellow-500 mb-2">
+          <div class="text-xs text-gray-400">Displacement PF (cos α)</div>
+          <div class="text-lg font-bold text-yellow-300">${DPF.toFixed(4)}</div>
+        </div>
+        <div class="card-result border-l-4 border-green-500 mb-2">
+          <div class="text-xs text-gray-400">Distortion Factor (DF)</div>
+          <div class="text-lg font-bold text-green-300">${DF_calc.toFixed(4)}</div>
+        </div>
+        <div class="card-result border-l-4 border-purple-500 mb-2">
+          <div class="text-xs text-gray-400">Total PF = DPF × DF</div>
+          <div class="text-lg font-bold text-purple-300">${PF_calc.toFixed(4)}</div>
+        </div>`;
+
+      if (charts.tab9) { charts.tab9.destroy(); delete charts.tab9; }
+      const ctx = document.getElementById('chart-tab9').getContext('2d');
+      charts.tab9 = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Harmonic Current (A rms)',
+              data: specRms.map(v => parseFloat(v.toFixed(3))),
+              backgroundColor: harmonics.map((h, i) => i === 0 ? '#3b82f6' : '#7c3aed'),
+              borderColor: harmonics.map((h, i) => i === 0 ? '#1d4ed8' : '#5b21b6'),
+              borderWidth: 1
+            },
+            {
+              type: 'line',
+              label: 'IEC 61000-3-2 Class A Limit',
+              data: limitData,
+              borderColor: '#ef4444',
+              backgroundColor: 'transparent',
+              pointRadius: 5,
+              pointStyle: 'crossRot',
+              pointBorderWidth: 2,
+              borderWidth: 0,
+              showLine: false
+            }
+          ]
+        },
+        options: {
+          responsive: true, animation: false,
+          plugins: { legend: { labels: { color: '#e5e7eb' } } },
+          scales: {
+            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Harmonic Order', color: '#9ca3af' } },
+            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' }, title: { display: true, text: 'Current (A rms)', color: '#9ca3af' }, min: 0 }
+          }
+        }
+      });
+    }
+
+    // =====================================================================
+    // EVENT LISTENERS & INITIALIZATION
+    // =====================================================================
+    window.addEventListener('load', function () {
+      calculate();
+
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          switchTab(this.dataset.tab);
+        });
+      });
+
+      // Sub-tab switching
+      document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          switchSubTab(this.dataset.sub, this.dataset.group);
+        });
+      });
+
+      // Tab 2: calculate button
+      document.getElementById('btn-calc').addEventListener('click', function () {
+        state.Vs = parseFloat(document.getElementById('p-Vs').value) || 120;
+        state.freq = parseFloat(document.getElementById('p-freq').value) || 60;
+        state.HP = parseFloat(document.getElementById('p-HP').value) || 5;
+        state.Vrated = parseFloat(document.getElementById('p-Vrated').value) || 110;
+        state.Kb = parseFloat(document.getElementById('p-Kb').value) || 0.055;
+        state.Ra = parseFloat(document.getElementById('p-Ra').value) || 0.5;
+        state.La = parseFloat(document.getElementById('p-La').value) || 0.01;
+        state.J = parseFloat(document.getElementById('p-J').value) || 0.01;
+        state.N_ref = parseFloat(document.getElementById('p-Nref').value) || 1000;
+        calculate();
+        updateResultsGrid();
+      });
+
+      // Tab 4: motor simulation buttons
+      document.getElementById('sim-start').addEventListener('click', function () {
+        if (!motorSim.running) {
+          motorSim.running = true;
+          motorSim.intervalId = setInterval(motorSimTick, 100);
+        }
+      });
+      document.getElementById('sim-stop').addEventListener('click', function () {
+        if (motorSim.intervalId) { clearInterval(motorSim.intervalId); motorSim.intervalId = null; }
+        motorSim.running = false;
+      });
+      document.getElementById('sim-reset').addEventListener('click', motorSimReset);
+
+      // Tab 7: PID run button
+      document.getElementById('btn-pid-run').addEventListener('click', runPIDSimulation);
+
+      // Tab 7: Fuzzy run button
+      document.getElementById('btn-fuzzy-run').addEventListener('click', runFuzzyComparison);
+
+      // Initialize first tab visible items
+      initTab2();
+    });
+  </script>
+</body>
+</html>
