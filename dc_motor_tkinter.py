@@ -9,6 +9,9 @@ from matplotlib.figure import Figure
 from scipy.integrate import solve_ivp
 import math
 
+# Division safety epsilon used in power-quality calculations
+_EPSILON = 1e-12
+
 # ─────────────────────────────────────────────
 # Helper / Calculation class
 # ─────────────────────────────────────────────
@@ -235,7 +238,7 @@ class DCMotorApp(tk.Tk):
             ("heading", "Notes\n"),
             ("label", "  \u2022 Continuous conduction assumed throughout (large La).\n"),
             ("label", "  \u2022 All four thyristors of the H-bridge are ideal switches.\n"),
-            ("label", "  \u2022 Freewheeling is not used; average output is 2Vm/\u03c0 \u00d7 cos(\u03b1).\n"),
+            ("label", "  \u2022 freewheeling is not used; average output is 2Vm/\u03c0 \u00d7 cos(\u03b1).\n"),
             ("label", "  \u2022 PF is low at large \u03b1; capacitor compensation may improve it.\n"),
             ("label", "  \u2022 High THD (48%) indicates significant harmonic injection.\n"),
         ]
@@ -287,6 +290,7 @@ class DCMotorApp(tk.Tk):
         self._calc_params()
 
     def _param_changed(self):
+        # Reserved for future live-update behaviour on slider drag
         pass
 
     def _calc_params(self):
@@ -560,15 +564,15 @@ class DCMotorApp(tk.Tk):
         t_eval = np.linspace(0, 3.0, 1500)
         y0 = [0.0, 0.0]
         try:
-            sol = solve_ivp(odes, t_span, y0, t_eval=t_eval, method="RK45",
-                            dense_output=False)
+            sol = solve_ivp(odes, t_span, y0, t_eval=t_eval, method="RK45")
             self._sim_t = sol.t
             self._sim_ia = sol.y[0]
             self._sim_omega = sol.y[1] * 60 / (2 * math.pi)
-        except Exception:
+        except (ValueError, RuntimeError) as exc:
             self._sim_t = np.array([])
             self._sim_ia = np.array([])
             self._sim_omega = np.array([])
+            self.status_var.set(f"  Simulation error: {exc}")
 
         self._draw_simulation()
         self._sim_running = False
@@ -721,7 +725,7 @@ class DCMotorApp(tk.Tk):
         TMS = self.TMS_var.get()
         fuse_rating = self.fuse_rating_var.get()
 
-        I = np.logspace(np.log10(1.1 * Ip), np.log10(20 * Ip), 500)
+        I = np.logspace(np.log10(max(1.1 * Ip, Ip + 0.1)), np.log10(20 * Ip), 500)
         # IEC 60255 Normal Inverse
         ratio = I / Ip
         relay_t = TMS * 0.14 / (ratio**0.02 - 1)
@@ -899,7 +903,7 @@ class DCMotorApp(tk.Tk):
         centers = np.linspace(x_min, x_max, 5)
         sigma = (x_max - x_min) / 8.0
         mf = np.exp(-0.5 * ((x - centers) / sigma) ** 2)
-        mf = mf / (mf.sum() + 1e-12)
+        mf = mf / (mf.sum() + _EPSILON)
         return mf  # [NB, NS, ZO, PS, PB]
 
     def _fuzzy_output(self, error, d_error, e_max, de_max, u_max):
@@ -922,7 +926,7 @@ class DCMotorApp(tk.Tk):
                 out_center = centers_u[rule_table[i, j]]
                 num += strength * out_center
                 den += strength
-        if den < 1e-12:
+        if den < _EPSILON:
             return 0.0
         return num / den
 
@@ -1218,7 +1222,7 @@ class DCMotorApp(tk.Tk):
         I_rms_total = math.sqrt(sum(a ** 2 for a in amplitudes) / 2)
         THD_calc = math.sqrt(sum(a ** 2 for a in amplitudes[1:]) / 2) / (I1 / math.sqrt(2)) * 100
         disp_PF = math.cos(alpha_r)
-        dist_factor = I1 / math.sqrt(2) / (I_rms_total + 1e-12)
+        dist_factor = I1 / math.sqrt(2) / (I_rms_total + _EPSILON)
         apparent_PF = disp_PF * dist_factor
 
         # IEC 61000-3-2 Class A limits (A rms) for odd harmonics
@@ -1306,8 +1310,8 @@ class DCMotorApp(tk.Tk):
                 f"\u03b1={r['alpha_deg']:.2f}\u00b0  Ia={r['Ia_rated']:.2f}A  "
                 f"PF={r['PF']:.4f}  THD={r['THD']:.2f}%"
             )
-        except Exception:
-            self.status_var.set("  Ready")
+        except (ValueError, ArithmeticError):
+            self.status_var.set("  Error updating status")
 
 
 # ─────────────────────────────────────────────
