@@ -1369,6 +1369,7 @@
       // Tab 4: motor simulation buttons
       document.getElementById('sim-start').addEventListener('click', function () {
         if (!motorSim.running) {
+          initTab4();
           motorSim.running = true;
           motorSim.intervalId = setInterval(motorSimTick, 100);
         }
