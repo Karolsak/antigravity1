@@ -1255,6 +1255,7 @@ function showTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  Object.values(charts).forEach(c => c.resize());
 }
 
 function onStart()  { running = true;  document.getElementById('status').textContent = '▶ Running'; updateAll(); }
