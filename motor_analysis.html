@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>3-Phase Induction Motor — Comprehensive Analysis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a;--panel:#1e293b;--border:#334155;
+    --accent:#38bdf8;--acc2:#a78bfa;--acc3:#34d399;
+    --acc4:#fb923c;--acc5:#f472b6;
+    --txt:#f1f5f9;--txtd:#94a3b8;
+    --warn:#fbbf24;--err:#f87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .tab-btn{padding:8px 14px;border:none;background:var(--panel);color:var(--txtd);cursor:pointer;border-bottom:2px solid transparent;font-size:13px;font-weight:600;white-space:nowrap;transition:all .2s}
+  .tab-btn.active,.tab-btn:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-pane{display:none}
+  .tab-pane.active{display:block}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .result-box{background:#0a0f1e;border:1px solid var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:12.5px;line-height:1.7;overflow-y:auto;max-height:420px}
+  .hl-head{color:var(--accent);font-weight:700}
+  .hl-ans{color:var(--acc3);font-weight:700}
+  .hl-dim{color:var(--txtd)}
+  canvas{border-radius:6px}
+  svg text{dominant-baseline:middle}
+  .kpi{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 16px;flex:1;min-width:130px}
+  .kpi-val{font-size:22px;font-weight:700;color:var(--accent)}
+  .kpi-lbl{font-size:11px;color:var(--txtd);margin-top:2px}
+</style>
+</head>
+<body>
+
+<header style="background:var(--panel);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+  <div>
+    <h1 style="font-size:18px;font-weight:700;color:var(--accent)">⚡ 3-Phase Induction Motor — Comprehensive Analysis Suite</h1>
+    <p style="font-size:12px;color:var(--txtd)">400 V · Rotor R₂ = 0.02 Ω · Standstill X₂ = 0.1 Ω · Turns ratio N₁/N₂ = 5</p>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+    <button onclick="updateAll()" style="background:var(--acc3);color:#0a0f1e;border:none;border-radius:6px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:13px">▶ Recalculate</button>
+    <button onclick="resetDefaults()" style="background:var(--panel);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:13px">↺ Reset</button>
+  </div>
+</header>
+
+<div style="display:flex;flex:1;overflow:hidden;min-height:0">
+
+  <aside style="width:270px;min-width:230px;background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;padding:14px 12px;flex-shrink:0">
+    <h2 style="font-size:12px;font-weight:700;color:var(--acc3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Motor Parameters</h2>
+    <div id="slider-container"></div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+      <p style="font-size:11px;color:var(--txtd);font-weight:600;margin-bottom:6px">Controller Mode</p>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:4px">
+        <input type="radio" name="ctrl" value="pid" checked onchange="updateAll()"> PID
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+        <input type="radio" name="ctrl" value="fuzzy" onchange="updateAll()"> Fuzzy Logic
+      </label>
+    </div>
+  </aside>
+
+  <main style="flex:1;overflow:auto;padding:16px;min-width:0">
+
+    <div style="display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:16px;padding-bottom:0">
+      <button class="tab-btn active" onclick="switchTab('solution',this)">📐 Solution</button>
+      <button class="tab-btn" onclick="switchTab('torque',this)">⚙ Torque-Speed</button>
+      <button class="tab-btn" onclick="switchTab('fault',this)">⚡ Fault Current</button>
+      <button class="tab-btn" onclick="switchTab('protection',this)">🛡 Protection</button>
+      <button class="tab-btn" onclick="switchTab('controller',this)">🎛 Speed Control</button>
+      <button class="tab-btn" onclick="switchTab('thermal',this)">🌡 Thermal</button>
+      <button class="tab-btn" onclick="switchTab('economic',this)">💰 Economic</button>
+      <button class="tab-btn" onclick="switchTab('harmonics',this)">〰 Harmonics</button>
+    </div>
+
+    <div id="tab-solution" class="tab-pane active">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px" id="kpi-row"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-wrap:wrap">
+        <div class="card">
+          <h3 style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">Step-by-Step Mathematical Solution</h3>
+          <div class="result-box" id="solution-text"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card" style="display:flex;justify-content:center">
+            <svg id="phasor-svg" width="320" height="220" style="overflow:visible"></svg>
+          </div>
+          <div class="card">
+            <h3 style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px">Key Results</h3>
+            <canvas id="result-bar" height="150"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-torque" class="tab-pane">
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div class="card"><canvas id="chart-torque-main" height="260"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><canvas id="chart-torque-slip" height="200"></canvas></div>
+          <div class="card"><canvas id="chart-current-speed" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-fault" class="tab-pane">
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div class="card"><canvas id="chart-fault-env" height="240"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><canvas id="chart-fault-inst" height="200"></canvas></div>
+          <div class="card"><canvas id="chart-fault-rf" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-protection" class="tab-pane">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+        <div class="card"><canvas id="chart-tcc" height="320"></canvas></div>
+        <div class="card" id="prot-summary"></div>
+      </div>
+    </div>
+
+    <div id="tab-controller" class="tab-pane">
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div class="card"><canvas id="chart-speed" height="240"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><canvas id="chart-load-profile" height="200"></canvas></div>
+          <div class="card"><canvas id="chart-speed-error" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-thermal" class="tab-pane">
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div class="card"><canvas id="chart-temp-rise" height="240"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><canvas id="chart-loss-bar" height="200"></canvas></div>
+          <div class="card"><canvas id="chart-overload" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-economic" class="tab-pane">
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div class="card"><canvas id="chart-energy-cost" height="240"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><canvas id="chart-efficiency" height="200"></canvas></div>
+          <div class="card"><canvas id="chart-cost-pie" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-harmonics" class="tab-pane">
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div class="card"><canvas id="chart-waveform" height="240"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><canvas id="chart-spectrum" height="200"></canvas></div>
+          <div class="card"><canvas id="chart-thd" height="200"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const range=(lo,hi,n)=>{const a=[];for(let i=0;i<n;i++)a.push(lo+(hi-lo)*i/(n-1));return a};
+const zip=(a,b)=>a.map((v,i)=>[v,b[i]]);
+const sq=x=>x*x;
+const norm=(r,x)=>Math.sqrt(sq(r)+sq(x));
+const PI=Math.PI;
+const sqrt=Math.sqrt;
+
+const charts={};
+function mkChart(id,cfg){
+  if(charts[id])charts[id].destroy();
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  charts[id]=new Chart(ctx,cfg);
+  return charts[id];
+}
+
+const C={
+  accent:'#38bdf8',acc2:'#a78bfa',acc3:'#34d399',
+  acc4:'#fb923c',acc5:'#f472b6',warn:'#fbbf24',
+  err:'#f87171',panel:'#1e293b',bg:'#0f172a',
+  grid:'#334155',txt:'#f1f5f9',txtd:'#94a3b8'
+};
+
+const baseChartOpts=(xt='',yt='',title='')=>({
+  responsive:true,
+  maintainAspectRatio:false,
+  animation:{duration:300},
+  plugins:{
+    title:{display:!!title,text:title,color:C.accent,font:{size:13,weight:'bold'}},
+    legend:{labels:{color:C.txt,font:{size:11},boxWidth:14}},
+    tooltip:{backgroundColor:C.panel,borderColor:C.grid,borderWidth:1,
+             titleColor:C.accent,bodyColor:C.txt,padding:8}
+  },
+  scales:{
+    x:{grid:{color:C.grid},ticks:{color:C.txtd,font:{size:10}},
+       title:{display:!!xt,text:xt,color:C.txtd,font:{size:11}}},
+    y:{grid:{color:C.grid},ticks:{color:C.txtd,font:{size:10}},
+       title:{display:!!yt,text:yt,color:C.txtd,font:{size:11}}}
+  }
+});
+
+const sliderDefs=[
+  {key:'V_line',label:'Supply Voltage (V)',      min:300,max:500,step:1,   def:400},
+  {key:'f',     label:'Frequency (Hz)',           min:45, max:65, step:0.5, def:50},
+  {key:'poles', label:'Poles',                    min:2,  max:12, step:2,   def:4},
+  {key:'R2',    label:'Rotor R₂ (Ω)',             min:0.005,max:0.2,step:0.005,def:0.02},
+  {key:'X2',    label:'Standstill X₂ (Ω)',        min:0.02,max:0.5,step:0.005,def:0.1},
+  {key:'R1',    label:'Stator R₁ (Ω)',            min:0.002,max:0.1,step:0.002,def:0.01},
+  {key:'X1',    label:'Stator X₁ (Ω)',            min:0.01,max:0.3,step:0.005,def:0.05},
+  {key:'Xm',    label:'Magnetising Xₘ (Ω)',       min:0.5, max:5.0,step:0.1, def:2.0},
+  {key:'turns', label:'Turns ratio N₁/N₂',        min:1,   max:10, step:0.5, def:5},
+  {key:'J',     label:'Inertia J (kg·m²)',         min:0.1, max:5,  step:0.1, def:0.5},
+  {key:'B',     label:'Friction B',               min:0.001,max:0.1,step:0.001,def:0.01},
+  {key:'TL',    label:'Load Torque (N·m)',         min:0,   max:300,step:5,   def:50},
+  {key:'Kp',    label:'PID Kp',                   min:0.1, max:10, step:0.1, def:2},
+  {key:'Ki',    label:'PID Ki',                   min:0,   max:5,  step:0.05,def:0.5},
+  {key:'Kd',    label:'PID Kd',                   min:0,   max:2,  step:0.02,def:0.1},
+  {key:'Rf',    label:'Fault Resistance Rf (Ω)',  min:0.0001,max:0.5,step:0.001,def:0.001},
+  {key:'TL2',   label:'Step Load TL₂ (N·m)',      min:0,   max:400,step:10,  def:100},
+  {key:'tstep', label:'Step Time (s)',             min:0.5, max:5,  step:0.1, def:2},
+];
+
+const P={};
+
+function buildSliders(){
+  const container=document.getElementById('slider-container');
+  sliderDefs.forEach(def=>{
+    P[def.key]=def.def;
+    const wrap=document.createElement('div');
+    wrap.style.marginBottom='10px';
+    const topRow=document.createElement('div');
+    topRow.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:2px';
+    const lbl=document.createElement('span');
+    lbl.style.cssText='font-size:11px;color:var(--txtd)';
+    lbl.textContent=def.label;
+    const valLbl=document.createElement('span');
+    valLbl.id=`val-${def.key}`;
+    valLbl.style.cssText='font-size:11px;color:var(--accent);font-family:monospace;font-weight:700';
+    valLbl.textContent=def.def;
+    topRow.appendChild(lbl);
+    topRow.appendChild(valLbl);
+    const sl=document.createElement('input');
+    sl.type='range';
+    sl.min=def.min;sl.max=def.max;sl.step=def.step;sl.value=def.def;
+    sl.oninput=()=>{
+      const v=parseFloat(sl.value);
+      P[def.key]=v;
+      valLbl.textContent=v.toFixed(def.step<0.01?4:def.step<0.1?3:def.step<1?2:0);
+      updateAll();
+    };
+    wrap.appendChild(topRow);
+    wrap.appendChild(sl);
+    container.appendChild(wrap);
+  });
+}
+
+function resetDefaults(){
+  document.getElementById('slider-container').innerHTML='';
+  buildSliders();
+  updateAll();
+}
+
+function calcBase(){
+  const{V_line,f,poles,R2,X2,R1,X1,Xm,turns}=P;
+  const Vph=V_line/sqrt(3);
+  const E2=Vph/turns;
+  const ws=2*PI*f/(poles/2);
+  const Ns=120*f/poles;
+  const R_ext=Math.max(X2-R2,0);
+  const R_tot=R2+R_ext;
+  const Z_st=norm(R_tot,X2);
+  const I2=E2/Z_st;
+  const T_st=(3*sq(E2)*R_tot)/(ws*(sq(R_tot)+sq(X2)));
+  const sTmax=R2/norm(R1,(X1+X2));
+  const Tmax=(3/ws)*sq(Vph)/(2*(R1+norm(R1,(X1+X2))));
+  return{Vph,E2,ws,Ns,R_ext,R_tot,I2,T_st,sTmax,Tmax};
+}
+
+function torqueCurve(R_add=0,n=600){
+  const{V_line,f,poles,R2,X2,R1,X1}=P;
+  const Vph=V_line/sqrt(3),ws=2*PI*f/(poles/2),Ns=120*f/poles;
+  const R2t=R2+R_add;
+  const s=range(0.001,1,n);
+  const T=s.map(sv=>(3/ws)*sq(Vph)*(R2t/sv)/(sq(R1+R2t/sv)+sq(X1+X2)));
+  const N=s.map(sv=>Ns*(1-sv));
+  return{s,N,T};
+}
+
+function faultAt(tv,Ipp,Ip,Iss,tpp,tp,we){
+  return[Ipp*Math.exp(-tv/tpp)+(Ip-Iss)*Math.exp(-tv/tp)+Iss,
+         Ipp*sqrt(2)*Math.exp(-tv/tp)];
+}
+
+function faultCurrents(n=600){
+  const{V_line,f,R1,X1,X2,Xm,Rf}=P;
+  const Vph=V_line/sqrt(3),we=2*PI*f;
+  const Xdpp=(X1+X2)/2,Xdp=X1+X2,Xd=X1+Xm;
+  const Ipp=Vph/Xdpp,Ip=Vph/Xdp,Iss=Vph/norm(Xd,R1+(Rf||0.001));
+  const tpp=0.05,tp=0.3;
+  const t=range(0,0.5,n);
+  const iac=t.map(tv=>Ipp*Math.exp(-tv/tpp)+(Ip-Iss)*Math.exp(-tv/tp)+Iss);
+  const idc=t.map(tv=>Ipp*sqrt(2)*Math.exp(-tv/tp));
+  const itot=iac.map((v,i)=>sqrt(2)*v+idc[i]);
+  const tinst=range(0,0.1,800);
+  const iinst=tinst.map(tv=>{
+    const[_iac,_idc]=faultAt(tv,Ipp,Ip,Iss,tpp,tp,we);
+    return sqrt(2)*_iac*Math.sin(we*tv)+_idc;
+  });
+  return{t,iac,idc,itot,tinst,iinst};
+}
+
+function simSpeed(tend=6,npts=800){
+  const{f,poles,J,B,TL,Kp,Ki,Kd,TL2,tstep,V_line,R2,R1,X1,X2}=P;
+  const ws=2*PI*f/(poles/2),Ns=120*f/poles;
+  const wsref=ws*0.95;
+  const Vph=V_line/sqrt(3);
+  const mode=document.querySelector('input[name=ctrl]:checked')?.value||'pid';
+  const fuzzy=mode==='fuzzy';
+  function Te(omega){
+    const s=Math.max((ws-omega)/ws,1e-4);
+    const t=(3/ws)*sq(Vph)*(R2/s)/(sq(R1+R2/s)+sq(X1+X2));
+    return Math.min(t,800);
+  }
+  function fuzzyGain(e){return Math.max(0.5,1+2*Math.max(-1,Math.min(1,e/ws)));}
+  const dt=tend/npts;
+  const t=[],rpm=[];
+  let omega=0,intE=0,prevE=0;
+  for(let i=0;i<=npts;i++){
+    const ti=i*dt;
+    t.push(ti);
+    rpm.push(omega*60/(2*PI));
+    const TLcur=ti<tstep?TL:TL2;
+    const e=wsref-omega;
+    let u;
+    if(fuzzy){u=fuzzyGain(e)*(Kp*e+Ki*intE);}
+    else{u=Kp*e+Ki*intE+Kd*(e-prevE)/dt;}
+    u=Math.max(-500,Math.min(500,u));
+    const domega=(Te(omega)-TLcur-B*omega+u)/J;
+    omega+=domega*dt;
+    omega=Math.max(0,omega);
+    intE+=e*dt;
+    prevE=e;
+  }
+  return{t,rpm,wsref,Ns,ws};
+}
+
+function thermalModel(n=500){
+  const{R2,R1,turns,V_line}=P;
+  const b=calcBase();
+  const I2=b.I2,I1=I2/turns;
+  const Pcu=3*(sq(I2)*R2+sq(I1)*R1);
+  const Pfe=150,Pst=50,Ptot=Pcu+Pfe+Pst;
+  const tau=600,Tamb=40,Rth=0.08;
+  const Tss=Tamb+Ptot*Rth;
+  const t=range(0,3600,n);
+  const T=t.map(tv=>Tss+(Tamb-Tss)*Math.exp(-tv/tau));
+  return{t,T,Pcu,Pfe,Tss};
+}
+
+function harmonics(){
+  const{f}=P;
+  const b=calcBase();
+  const I2=b.I2;
+  const orders=[1,5,7,11,13,17,19,23,25];
+  const pu=[1,.175,.110,.045,.029,.015,.010,.009,.008];
+  const mags=pu.map(p=>p*I2);
+  const harm2=mags.slice(1).reduce((s,v)=>s+sq(v),0);
+  const THD=sqrt(harm2)/mags[0]*100;
+  const t=range(0,3/f,1000);
+  const wave=t.map(tv=>orders.reduce((s,h,i)=>s+mags[i]*sqrt(2)*Math.sin(2*PI*h*f*tv),0));
+  const fund=t.map(tv=>mags[0]*sqrt(2)*Math.sin(2*PI*f*tv));
+  return{orders,mags,THD,t,wave,fund};
+}
+
+function economicAnalysis(){
+  const b=calcBase();
+  const eta=0.92,rate=0.12,co2k=0.45;
+  const Pin=b.Vph*b.I2*3/eta;
+  const hrs=range(0,8760,200);
+  const cost=hrs.map(h=>Pin/1000*rate*h);
+  const co2=hrs.map(h=>Pin/1000*co2k*h);
+  const load=range(10,125,200);
+  const effic=load.map(l=>Math.max(0,95-0.001*sq(l-75)-1.5/(l/100+0.1)));
+  return{Pin,hrs,cost,co2,load,effic};
+}
+
+function updateAll(){
+  updateSolution();
+  updateTorque();
+  updateFault();
+  updateProtection();
+  updateController();
+  updateThermal();
+  updateEconomic();
+  updateHarmonics();
+}
+
+function updateSolution(){
+  const b=calcBase();
+  const{V_line,R2,X2,turns}=P;
+  const kpiData=[
+    {val:b.R_ext.toFixed(4),lbl:'R_ext (Ω)',clr:C.accent},
+    {val:b.I2.toFixed(2),   lbl:'I₂ starting (A)',clr:C.acc2},
+    {val:b.T_st.toFixed(2), lbl:'T_start (N·m)',clr:C.acc3},
+    {val:b.Tmax.toFixed(2), lbl:'T_max (N·m)',clr:C.warn},
+    {val:b.Ns.toFixed(0),   lbl:'Sync Speed (RPM)',clr:C.acc4},
+  ];
+  const kpiRow=document.getElementById('kpi-row');
+  kpiRow.innerHTML=kpiData.map(k=>
+    `<div class="kpi"><div class="kpi-val" style="color:${k.clr}">${k.val}</div><div class="kpi-lbl">${k.lbl}</div></div>`
+  ).join('');
+  const Vph=b.Vph,E2=b.E2,R_ext=b.R_ext,R_tot=b.R_tot;
+  const Z_st=norm(R_tot,X2),I2=b.I2;
+  const lines=[
+    {t:'head',s:'═'.repeat(50)},
+    {t:'head',s:'  PROBLEM STATEMENT'},
+    {t:'head',s:'═'.repeat(50)},
+    {t:'dim', s:`  V_line = ${V_line} V (line-to-line, 3-phase)`},
+    {t:'dim', s:`  R₂ = ${R2} Ω · X₂ = ${X2} Ω · N₁/N₂ = ${turns}`},
+    {t:'head',s:''},
+    {t:'head',s:'  STEP 1 — Phase Voltage'},
+    {t:'norm',s:`  V_ph = V_line / √3 = ${V_line} / 1.7321 = ${Vph.toFixed(4)} V`},
+    {t:'head',s:''},
+    {t:'head',s:'  STEP 2 — Rotor EMF (referred to rotor winding)'},
+    {t:'norm',s:`  E₂ = V_ph / (N₁/N₂) = ${Vph.toFixed(4)} / ${turns} = ${E2.toFixed(4)} V`},
+    {t:'head',s:''},
+    {t:'head',s:'  STEP 3 — Condition for Maximum Starting Torque'},
+    {t:'norm',s:`  At standstill (s=1): R₂_total = X₂ for max torque`},
+    {t:'norm',s:`  R₂_total = X₂ = ${X2} Ω  →  R_ext = X₂ - R₂`},
+    {t:'ans', s:`  R_ext = ${X2} - ${R2} = ${R_ext.toFixed(4)} Ω   ◄ ANSWER 1`},
+    {t:'head',s:''},
+    {t:'head',s:'  STEP 4 — Rotor Current at Starting'},
+    {t:'norm',s:`  Z = √(R_total² + X₂²) = √(${R_tot.toFixed(4)}² + ${X2}²) = ${Z_st.toFixed(4)} Ω`},
+    {t:'norm',s:`  I₂ = E₂ / Z = ${E2.toFixed(4)} / ${Z_st.toFixed(4)}`},
+    {t:'ans', s:`  I₂ = ${I2.toFixed(4)} A   ◄ ANSWER 2`},
+    {t:'head',s:''},
+    {t:'head',s:'  STEP 5 — Other Key Results'},
+    {t:'norm',s:`  Synchronous speed Ns = ${b.Ns.toFixed(1)} RPM  /  ωs = ${b.ws.toFixed(4)} rad/s`},
+    {t:'norm',s:`  Starting torque T_st = ${b.T_st.toFixed(4)} N·m`},
+    {t:'norm',s:`  Max torque T_max     = ${b.Tmax.toFixed(4)} N·m`},
+    {t:'head',s:''},
+    {t:'head',s:'  PHYSICAL INTERPRETATION'},
+    {t:'norm',s:`  Adding R_ext = ${R_ext.toFixed(4)} Ω to the rotor circuit shifts`},
+    {t:'norm',s:'  the torque peak to s=1 (standstill), producing maximum'},
+    {t:'norm',s:'  starting torque. Principle of wound-rotor rheostat starter.'},
+  ];
+  const box=document.getElementById('solution-text');
+  box.innerHTML=lines.map(l=>{
+    if(l.t==='head')return`<span class="hl-head">${escHtml(l.s)}</span><br>`;
+    if(l.t==='ans') return`<span class="hl-ans">${escHtml(l.s)}</span><br>`;
+    if(l.t==='dim') return`<span class="hl-dim">${escHtml(l.s)}</span><br>`;
+    return`${escHtml(l.s)}<br>`;
+  }).join('');
+  drawPhasor(b);
+  mkChart('result-bar',{
+    type:'bar',
+    data:{
+      labels:['R_ext (Ω)','I₂ (A)','T_start (N·m)','T_max (N·m)','Ns (RPM÷10)'],
+      datasets:[{data:[b.R_ext,b.I2,b.T_st,b.Tmax,b.Ns/10],
+        backgroundColor:[C.accent,C.acc2,C.acc3,C.warn,C.acc4],borderRadius:5}]
+    },
+    options:{...baseChartOpts('Parameter','Value','Key Results Summary'),
+             plugins:{...baseChartOpts().plugins,legend:{display:false}}}
+  });
+}
+
+function drawPhasor(b){
+  const svg=document.getElementById('phasor-svg');
+  const W=320,H=220,pad=50;
+  const Rt=b.R_tot,X2=P.X2,Z=norm(Rt,X2);
+  const sc=Math.min((W-2*pad)/Z,(H-2*pad)/Z)*0.8;
+  const ox=60,oy=H-50;
+  const px=x=>ox+x*sc,py=y=>oy-y*sc;
+  svg.innerHTML=`
+  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="currentColor"/></marker></defs>
+  <line x1="${ox}" y1="${oy}" x2="${W-20}" y2="${oy}" stroke="${C.grid}" stroke-width="0.7"/>
+  <line x1="${ox}" y1="${oy}" x2="${ox}" y2="10" stroke="${C.grid}" stroke-width="0.7"/>
+  <line x1="${ox}" y1="${oy}" x2="${px(Rt)}" y2="${oy}"
+        stroke="${C.accent}" stroke-width="2.5" marker-end="url(#arr)" color="${C.accent}"/>
+  <text x="${(ox+px(Rt))/2}" y="${oy+18}" fill="${C.accent}" font-size="11" text-anchor="middle">
+    R=${Rt.toFixed(3)} Ω</text>
+  <line x1="${px(Rt)}" y1="${oy}" x2="${px(Rt)}" y2="${py(X2)}"
+        stroke="${C.warn}" stroke-width="2.5" marker-end="url(#arr)" color="${C.warn}"/>
+  <text x="${px(Rt)+30}" y="${(oy+py(X2))/2}" fill="${C.warn}" font-size="11" text-anchor="middle">
+    X=${X2.toFixed(3)} Ω</text>
+  <line x1="${ox}" y1="${oy}" x2="${px(Rt)}" y2="${py(X2)}"
+        stroke="${C.acc3}" stroke-width="2.5" marker-end="url(#arr)" color="${C.acc3}"/>
+  <text x="${(ox+px(Rt))/2-12}" y="${(oy+py(X2))/2-8}" fill="${C.acc3}" font-size="11">
+    Z=${Z.toFixed(3)} Ω</text>
+  <text x="${W/2}" y="14" fill="${C.accent}" font-size="12" font-weight="bold" text-anchor="middle">
+    Rotor Impedance Phasor (s=1)</text>`;
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function updateTorque(){
+  const b=calcBase();
+  const R_ext=b.R_ext;
+  const adds=[0,R_ext/2,R_ext,R_ext*1.5,R_ext*2];
+  const lbls=['R_ext=0','R_ext/2',`R_ext=${R_ext.toFixed(3)}Ω (max-torque)`,
+               '1.5×R_ext','2×R_ext'];
+  const clrs=[C.accent,C.acc2,C.acc3,C.warn,C.acc4];
+  const datasets=adds.map((r,i)=>{
+    const{N,T}=torqueCurve(r);
+    return{label:lbls[i],data:zip(N,T).map(([x,y])=>({x,y})),
+           borderColor:clrs[i],fill:false,pointRadius:0,
+           borderWidth:i===2?3:1.5,tension:0.3};
+  });
+  datasets.push({label:`TL=${P.TL} N·m`,
+    data:[{x:0,y:P.TL},{x:b.Ns,y:P.TL}],
+    borderColor:C.err,borderDash:[6,3],fill:false,pointRadius:0,borderWidth:1.5});
+  mkChart('chart-torque-main',{
+    type:'line',data:{datasets},
+    options:{...baseChartOpts('Speed (RPM)','Torque (N·m)','Torque vs Speed — Varying External Resistance'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Speed (RPM)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Torque (N·m)',color:C.txtd}}}}
+  });
+  const slipDS=adds.slice(0,3).map((r,i)=>{
+    const{s,T}=torqueCurve(r);
+    return{label:lbls[i],data:zip(s,T).map(([x,y])=>({x,y})),
+           borderColor:clrs[i],fill:false,pointRadius:0,borderWidth:1.8,tension:0.3};
+  });
+  mkChart('chart-torque-slip',{
+    type:'line',data:{datasets:slipDS},
+    options:{...baseChartOpts('Slip s','Torque (N·m)','Torque vs Slip'),
+             parsing:false,
+             scales:{x:{type:'linear',reverse:true,grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Slip s',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Torque (N·m)',color:C.txtd}}}}
+  });
+  const curDS=adds.slice(0,3).map((r,i)=>{
+    const E2=calcBase().E2;
+    const R2t=P.R2+r,X2=P.X2;
+    const s=range(0.001,1,300);
+    const N=s.map(sv=>(120*P.f/P.poles)*(1-sv));
+    const I2=s.map(sv=>E2/norm(R2t/sv,X2));
+    return{label:lbls[i],data:zip(N,I2).map(([x,y])=>({x,y})),
+           borderColor:clrs[i],fill:false,pointRadius:0,borderWidth:1.8,tension:0.3};
+  });
+  mkChart('chart-current-speed',{
+    type:'line',data:{datasets:curDS},
+    options:{...baseChartOpts('Speed (RPM)','I₂ (A)','Rotor Current vs Speed'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Speed (RPM)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Rotor Current I₂ (A)',color:C.txtd}}}}
+  });
+}
+
+function updateFault(){
+  const{t,iac,idc,itot,tinst,iinst}=faultCurrents();
+  mkChart('chart-fault-env',{
+    type:'line',
+    data:{datasets:[
+      {label:'Total (peak)',data:zip(t,itot).map(([x,y])=>({x,y})),
+       borderColor:C.accent,fill:false,pointRadius:0,borderWidth:2,tension:0.3},
+      {label:'AC envelope',data:zip(t,iac.map(v=>sqrt(2)*v)).map(([x,y])=>({x,y})),
+       borderColor:C.acc3,fill:false,pointRadius:0,borderWidth:2,tension:0.3},
+      {label:'DC offset',data:zip(t,idc).map(([x,y])=>({x,y})),
+       borderColor:C.warn,borderDash:[6,3],fill:false,pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{...baseChartOpts('Time (s)','Current (A)','Fault Current — Sub-transient/Transient/DC'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (s)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Current (A)',color:C.txtd}}}}
+  });
+  mkChart('chart-fault-inst',{
+    type:'line',
+    data:{datasets:[{label:'Instantaneous current',
+       data:zip(tinst.map(v=>v*1000),iinst).map(([x,y])=>({x,y})),
+       borderColor:C.accent,fill:false,pointRadius:0,borderWidth:1.5,tension:0.1}]},
+    options:{...baseChartOpts('Time (ms)','Current (A)','Instantaneous Waveform (first 100 ms)'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (ms)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Current (A)',color:C.txtd}}}}
+  });
+  const Rf_arr=range(0.0001,0.5,200);
+  const{V_line,R1,X1,X2}=P;
+  const Vph=V_line/sqrt(3);
+  const I_rf=Rf_arr.map(rf=>Vph/norm(R1+rf,X1+X2)*sqrt(2));
+  mkChart('chart-fault-rf',{
+    type:'line',
+    data:{datasets:[{label:'I_fault vs Rf',data:zip(Rf_arr,I_rf).map(([x,y])=>({x,y})),
+       borderColor:C.err,fill:false,pointRadius:0,borderWidth:2}]},
+    options:{...baseChartOpts('Fault Resistance Rf (Ω)','Current (A)','Fault Current vs Fault Resistance'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Rf (Ω)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Current (A)',color:C.txtd}}}}
+  });
+}
+
+function updateProtection(){
+  const b=calcBase();
+  const Ifl=b.I2*0.30,Ifault=b.I2;
+  function tcc(I,pickup,dial,k=0.14,a=0.02){
+    if(I<=pickup)return null;
+    const v=dial*k/(Math.pow(I/pickup,a)-1);
+    return Math.max(0.01,Math.min(v,100));
+  }
+  const Iarr=range(Ifl*0.8,Ifault*3,300);
+  const pu1=Ifl*1.25,d1=0.5,pu2=Ifl*1.10,d2=1.5;
+  const t1=Iarr.map(I=>tcc(I,pu1,d1));
+  const t2=Iarr.map(I=>tcc(I,pu2,d2));
+  const tf=Iarr.map(I=>10*sq(Ifl/I));
+  mkChart('chart-tcc',{
+    type:'line',
+    data:{datasets:[
+      {label:`Motor Relay (PU=${pu1.toFixed(1)}A,TD=${d1})`,
+       data:Iarr.map((I,i)=>t1[i]!==null?{x:I,y:t1[i]}:null).filter(Boolean),
+       borderColor:C.accent,fill:false,pointRadius:0,borderWidth:2.2},
+      {label:`Feeder Relay (PU=${pu2.toFixed(1)}A,TD=${d2})`,
+       data:Iarr.map((I,i)=>t2[i]!==null?{x:I,y:t2[i]}:null).filter(Boolean),
+       borderColor:C.warn,fill:false,pointRadius:0,borderWidth:2.2},
+      {label:'Fuse',data:zip(Iarr,tf).map(([x,y])=>({x,y})),
+       borderColor:C.err,borderDash:[6,3],fill:false,pointRadius:0,borderWidth:1.8}
+    ]},
+    options:{...baseChartOpts('Current (A)','Time (s)','Time-Current Coordination (TCC) Curves'),
+             parsing:false,
+             scales:{x:{type:'logarithmic',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Current (A)',color:C.txtd}},
+                     y:{type:'logarithmic',min:0.01,max:100,grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Operating Time (s)',color:C.txtd}}}}
+  });
+  document.getElementById('prot-summary').innerHTML=`
+  <h3 style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:12px">Protection Settings</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>
+  ${[['Full-load current',`${Ifl.toFixed(2)} A`],
+     ['Fault current',`${Ifault.toFixed(2)} A`],
+     ['Motor relay pickup',`${pu1.toFixed(2)} A`],
+     ['Motor relay time-dial',`${d1}`],
+     ['Feeder relay pickup',`${pu2.toFixed(2)} A`],
+     ['Feeder relay time-dial',`${d2}`],
+     ['Target CTI','0.3 s'],
+     ['Overload class','10A (IEC 60947-4-1)'],
+     ['Relay standard','IEC 60255 (IDMT)'],
+    ].map(([k,v])=>`<tr><td style="color:var(--txtd);padding:5px 4px;border-bottom:1px solid var(--border)">${k}</td>
+    <td style="color:var(--acc3);font-weight:700;padding:5px 4px;border-bottom:1px solid var(--border);text-align:right">${v}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function updateController(){
+  const mode=document.querySelector('input[name=ctrl]:checked')?.value||'pid';
+  const{t,rpm,wsref,Ns}=simSpeed();
+  const refRPM=wsref*60/(2*PI);
+  const e=rpm.map(r=>refRPM-r);
+  const{TL,TL2,tstep}=P;
+  const TLprofile=t.map(tv=>tv<tstep?TL:TL2);
+  mkChart('chart-speed',{
+    type:'line',
+    data:{datasets:[
+      {label:'Motor Speed (RPM)',data:zip(t,rpm).map(([x,y])=>({x,y})),
+       borderColor:C.accent,fill:false,pointRadius:0,borderWidth:2.2},
+      {label:`Reference ${refRPM.toFixed(1)} RPM`,data:t.map(tv=>({x:tv,y:refRPM})),
+       borderColor:C.acc3,borderDash:[8,4],fill:false,pointRadius:0,borderWidth:1.5},
+      {label:`Sync ${Ns.toFixed(0)} RPM`,data:t.map(tv=>({x:tv,y:Ns})),
+       borderColor:C.txtd,borderDash:[3,6],fill:false,pointRadius:0,borderWidth:1}
+    ]},
+    options:{...baseChartOpts('Time (s)','Speed (RPM)',
+              `Speed Response — ${mode==='fuzzy'?'Fuzzy Logic':'PID'} Controller`),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (s)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Speed (RPM)',color:C.txtd}}}}
+  });
+  mkChart('chart-load-profile',{
+    type:'line',
+    data:{datasets:[{label:'Load Torque',data:zip(t,TLprofile).map(([x,y])=>({x,y})),
+       borderColor:C.warn,fill:false,pointRadius:0,borderWidth:2,stepped:'after'}]},
+    options:{...baseChartOpts('Time (s)','Torque (N·m)','Load Torque Profile'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (s)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Torque (N·m)',color:C.txtd}}}}
+  });
+  mkChart('chart-speed-error',{
+    type:'line',
+    data:{datasets:[{label:'Speed Error',data:zip(t,e).map(([x,y])=>({x,y})),
+       borderColor:C.err,fill:true,backgroundColor:'rgba(248,113,113,0.1)',
+       pointRadius:0,borderWidth:1.8}]},
+    options:{...baseChartOpts('Time (s)','Error (RPM)','Speed Error (Reference − Actual)'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (s)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Error (RPM)',color:C.txtd}}}}
+  });
+}
+
+function updateThermal(){
+  const{t,T,Pcu,Pfe,Tss}=thermalModel();
+  mkChart('chart-temp-rise',{
+    type:'line',
+    data:{datasets:[
+      {label:'Winding Temperature',data:zip(t.map(v=>v/60),T).map(([x,y])=>({x,y})),
+       borderColor:C.err,fill:true,backgroundColor:'rgba(248,113,113,0.1)',
+       pointRadius:0,borderWidth:2.2},
+      {label:`Steady-state ${Tss.toFixed(1)}°C`,data:[{x:0,y:Tss},{x:60,y:Tss}],
+       borderColor:C.warn,borderDash:[8,4],fill:false,pointRadius:0,borderWidth:1.5},
+      {label:'Class B (130°C)',data:[{x:0,y:130},{x:60,y:130}],
+       borderColor:C.acc4,borderDash:[3,6],fill:false,pointRadius:0,borderWidth:1.2},
+      {label:'Class F (155°C)',data:[{x:0,y:155},{x:60,y:155}],
+       borderColor:C.err,borderDash:[3,6],fill:false,pointRadius:0,borderWidth:1.2},
+    ]},
+    options:{...baseChartOpts('Time (min)','Temperature (°C)','Winding Temperature Rise — Thermal RC Model'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (min)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Temperature (°C)',color:C.txtd}}}}
+  });
+  mkChart('chart-loss-bar',{
+    type:'bar',
+    data:{labels:['Copper Loss','Iron Loss','Mech./Stray'],
+      datasets:[{data:[Pcu,Pfe,50],
+        backgroundColor:[C.err,C.warn,C.acc2],borderRadius:5}]},
+    options:{...baseChartOpts('','Power (W)','Loss Breakdown'),
+             plugins:{...baseChartOpts().plugins,legend:{display:false}}}
+  });
+  const Ipu=range(1.05,5,300),tau=600;
+  const Ttrip=Ipu.map(i=>tau*Math.log(sq(i)/(sq(i)-1)));
+  mkChart('chart-overload',{
+    type:'line',
+    data:{datasets:[{label:'Thermal trip time',data:zip(Ipu,Ttrip).map(([x,y])=>({x,y})),
+       borderColor:C.err,fill:true,backgroundColor:'rgba(248,113,113,0.1)',
+       pointRadius:0,borderWidth:2}]},
+    options:{...baseChartOpts('Overload Current (pu)','Trip Time (s)','Thermal Overload Curve'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Current (pu)',color:C.txtd}},
+                     y:{type:'logarithmic',min:1,max:600,grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Trip Time (s)',color:C.txtd}}}}
+  });
+}
+
+function updateEconomic(){
+  const{Pin,hrs,cost,co2,load,effic}=economicAnalysis();
+  mkChart('chart-energy-cost',{
+    type:'line',
+    data:{datasets:[
+      {label:'Annual Energy Cost ($)',data:zip(hrs,cost).map(([x,y])=>({x,y})),
+       borderColor:C.acc3,fill:false,pointRadius:0,borderWidth:2.2,yAxisID:'y'},
+      {label:'CO₂ Emissions (kg)',data:zip(hrs,co2).map(([x,y])=>({x,y})),
+       borderColor:C.warn,borderDash:[8,4],fill:false,pointRadius:0,borderWidth:1.8,yAxisID:'y2'}
+    ]},
+    options:{...baseChartOpts('Hours/Year','','Annual Energy Cost & CO₂ vs Operating Hours'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Hours/Year',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Cost (USD)',color:C.txtd}},
+                     y2:{position:'right',grid:{display:false},ticks:{color:C.warn},
+                         title:{display:true,text:'CO₂ (kg)',color:C.warn}}}}
+  });
+  mkChart('chart-efficiency',{
+    type:'line',
+    data:{datasets:[{label:'Motor Efficiency',data:zip(load,effic).map(([x,y])=>({x,y})),
+       borderColor:C.accent,fill:true,backgroundColor:'rgba(56,189,248,0.1)',
+       pointRadius:0,borderWidth:2.2}]},
+    options:{...baseChartOpts('Load (%)','Efficiency (%)','Efficiency vs Load'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Load (%)',color:C.txtd}},
+                     y:{min:50,max:100,grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Efficiency (%)',color:C.txtd}}}}
+  });
+  const cap=800,maint=300,enCost=cost[cost.length-1];
+  mkChart('chart-cost-pie',{
+    type:'doughnut',
+    data:{labels:[`Energy $${enCost.toFixed(0)}`,`Capital $${cap}`,`Maint $${maint}`],
+      datasets:[{data:[enCost,cap,maint],
+        backgroundColor:[C.accent,C.acc3,C.warn],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,
+             plugins:{title:{display:true,text:'Annual Cost Breakdown',
+                             color:C.accent,font:{size:13,weight:'bold'}},
+                      legend:{labels:{color:C.txt,font:{size:11}}}}}
+  });
+}
+
+function updateHarmonics(){
+  const{orders,mags,THD,t,wave,fund}=harmonics();
+  const{f}=P;
+  mkChart('chart-waveform',{
+    type:'line',
+    data:{datasets:[
+      {label:`Total (THD=${THD.toFixed(2)}%)`,
+       data:zip(t.map(v=>v*1000),wave).map(([x,y])=>({x,y})),
+       borderColor:C.accent,fill:false,pointRadius:0,borderWidth:2.2},
+      {label:'Fundamental',data:zip(t.map(v=>v*1000),fund).map(([x,y])=>({x,y})),
+       borderColor:C.acc3,borderDash:[6,3],fill:false,pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{...baseChartOpts('Time (ms)','Current (A)','Rotor Current Waveform with Harmonics'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Time (ms)',color:C.txtd}},
+                     y:{grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Current (A)',color:C.txtd}}}}
+  });
+  mkChart('chart-spectrum',{
+    type:'bar',
+    data:{labels:orders.map(o=>`H${o}`),
+      datasets:[{label:'Harmonic Current (A)',data:mags,
+        backgroundColor:orders.map(o=>o===1?C.accent:C.acc4),borderRadius:4}]},
+    options:{...baseChartOpts('Harmonic Order','Current (A)','Harmonic Spectrum'),
+             plugins:{...baseChartOpts().plugins,legend:{display:false}}}
+  });
+  const load=range(10,125,150);
+  const thd_arr=load.map(l=>THD*(1+0.3*Math.exp(-l/40)));
+  mkChart('chart-thd',{
+    type:'line',
+    data:{datasets:[
+      {label:'THD_I',data:zip(load,thd_arr).map(([x,y])=>({x,y})),
+       borderColor:C.warn,fill:false,pointRadius:0,borderWidth:2},
+      {label:'IEEE 519 limit (5%)',data:[{x:10,y:5},{x:125,y:5}],
+       borderColor:C.err,borderDash:[6,3],fill:false,pointRadius:0,borderWidth:1.5},
+      {label:`Operating ${THD.toFixed(2)}%`,data:[{x:10,y:THD},{x:125,y:THD}],
+       borderColor:C.acc3,borderDash:[3,6],fill:false,pointRadius:0,borderWidth:1.2},
+    ]},
+    options:{...baseChartOpts('Load (%)','THD (%)','Current THD vs Load'),
+             parsing:false,
+             scales:{x:{type:'linear',grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'Load (%)',color:C.txtd}},
+                     y:{min:0,grid:{color:C.grid},ticks:{color:C.txtd},
+                        title:{display:true,text:'THD (%)',color:C.txtd}}}}
+  });
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  setTimeout(()=>updateAll(),50);
+}
+
+buildSliders();
+updateAll();
+</script>
+</body>
+</html>
