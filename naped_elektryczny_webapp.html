@@ -1,0 +1,1408 @@
+<title>Stacja Napędu Elektrycznego</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EDEFEF; --surface:#FCFCFB; --surface-2:#F4F6F5; --ink:#15191B; --ink-2:#454F53;
+  --muted:#6C767A; --rule:#DCE0DF; --rule-2:#C6CCCA;
+  --c1:#C0562A; --c2:#0090A8; --c3:#3F51B5; --c4:#8F6B00; --c5:#8A3F73;
+  --accent:#C0562A; --good:#1F7A46; --warn:#8F6B00;
+  --grid:#E4E8E7; --shadow:0 1px 2px rgba(20,25,28,.06),0 8px 24px -16px rgba(20,25,28,.28);
+  --f-disp:"Familjen Grotesk",-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121413; --surface:#1A1A19; --surface-2:#212322; --ink:#ECEDEA; --ink-2:#C2C6C2;
+  --muted:#8E9491; --rule:#2C2F2D; --rule-2:#3C403D;
+  --c1:#D2714A; --c2:#16A79E; --c3:#7789E0; --c4:#B78F16; --c5:#C673AE;
+  --accent:#D2714A; --good:#4FAE78; --warn:#B78F16;
+  --grid:#262927; --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px -18px rgba(0,0,0,.9);
+}}
+:root[data-theme="dark"]{
+  --bg:#121413; --surface:#1A1A19; --surface-2:#212322; --ink:#ECEDEA; --ink-2:#C2C6C2;
+  --muted:#8E9491; --rule:#2C2F2D; --rule-2:#3C403D;
+  --c1:#D2714A; --c2:#16A79E; --c3:#7789E0; --c4:#B78F16; --c5:#C673AE;
+  --accent:#D2714A; --good:#4FAE78; --warn:#B78F16;
+  --grid:#262927; --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px -18px rgba(0,0,0,.9);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);
+  font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--f-disp);text-wrap:balance;margin:0;line-height:1.12;letter-spacing:-.015em}
+a{color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* ---------- header ---------- */
+header.top{border-bottom:1px solid var(--rule);background:var(--surface);position:relative;overflow:hidden}
+header.top canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+.top .wrap{position:relative;padding-top:56px;padding-bottom:44px}
+.kicker{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:18px}
+h1{font-size:clamp(34px,5.4vw,62px);font-weight:700;max-width:16ch}
+.lede{font-size:19px;color:var(--ink-2);max-width:60ch;margin-top:18px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.tag{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.04em;border:1px solid var(--rule-2);
+  border-radius:2px;padding:5px 9px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:44px;padding:44px 0 90px}
+nav.rail{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow-y:auto}
+nav.rail p{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 12px}
+nav.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.rail a{display:grid;grid-template-columns:26px 1fr;gap:6px;text-decoration:none;font-family:var(--f-disp);
+  font-size:13.5px;line-height:1.3;color:var(--ink-2);padding:6px 8px;border-radius:3px;border-left:2px solid transparent}
+nav.rail a span{font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:1px}
+nav.rail a:hover{background:var(--surface);color:var(--ink)}
+nav.rail a.on{background:var(--surface);border-left-color:var(--accent);color:var(--ink)}
+main{display:flex;flex-direction:column;gap:30px;min-width:0}
+
+/* ---------- module card ---------- */
+section.mod{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);scroll-margin-top:16px;overflow:hidden}
+.mod-head{padding:26px 30px 20px;border-bottom:1px solid var(--rule)}
+.mod-no{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.mod-head h2{font-size:26px;font-weight:600;margin-top:8px}
+.mod-head .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-top:8px;letter-spacing:.02em}
+.mod-body{padding:24px 30px 30px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:30px}
+.prose p{margin:0 0 13px}
+.prose p:last-child{margin-bottom:0}
+.prose strong{font-weight:500;color:var(--ink);box-shadow:inset 0 -.42em 0 color-mix(in srgb,var(--accent) 14%,transparent)}
+.school{border-left:2px solid var(--c2);background:var(--surface-2);padding:13px 16px;border-radius:0 4px 4px 0;margin:16px 0}
+.school b{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--c2);display:block;margin-bottom:5px;font-weight:600}
+.school p{font-size:15.5px;color:var(--ink-2)}
+.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--surface-2);border:1px solid var(--rule);
+  border-radius:4px;padding:11px 14px;margin:14px 0;overflow-x:auto;white-space:nowrap;color:var(--ink)}
+.eq em{color:var(--muted);font-style:normal}
+ul.plain{margin:12px 0;padding-left:18px}
+ul.plain li{margin-bottom:6px;font-size:16px;color:var(--ink-2)}
+
+/* ---------- chart panel ---------- */
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.chart-wrap{position:relative;background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:6px}
+canvas.plot{display:block;width:100%;height:300px;touch-action:none}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule-2);
+  border-radius:4px;padding:8px 10px;font-family:var(--f-mono);font-size:11.5px;line-height:1.5;
+  box-shadow:var(--shadow);opacity:0;transition:opacity .1s;z-index:5;white-space:nowrap;color:var(--ink)}
+.tip.show{opacity:1}
+.tip b{display:block;font-weight:600;margin-bottom:4px;letter-spacing:.03em}
+.tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.legend i.dash{background-image:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px)}
+
+/* ---------- controls ---------- */
+.ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 18px}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--f-mono);
+  font-size:11.5px;color:var(--muted);letter-spacing:.02em;margin-bottom:5px}
+.ctrl label b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;background:transparent;height:18px;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--rule-2);border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:var(--rule-2);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent);margin-top:-5.5px;border:2px solid var(--surface);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
+  border:2px solid var(--surface);cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--c3);outline-offset:3px;border-radius:3px}
+.seg{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule-2);border-radius:4px;overflow:hidden;width:fit-content}
+.seg button{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.03em;padding:7px 12px;border:0;
+  background:var(--surface);color:var(--ink-2);cursor:pointer;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--c3);outline-offset:-2px}
+
+/* ---------- readouts ---------- */
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:5px;overflow:hidden}
+.read{background:var(--surface-2);padding:11px 13px}
+.read span{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.read b{display:block;font-family:var(--f-disp);font-size:21px;font-weight:600;margin-top:3px;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+.read b small{font-family:var(--f-mono);font-size:11px;font-weight:400;color:var(--muted);margin-left:3px}
+.note{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.55}
+
+/* ---------- table ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:5px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:460px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule)}
+th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  background:var(--surface-2)}
+td{color:var(--ink-2)}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+tr:last-child td{border-bottom:0}
+
+footer{border-top:1px solid var(--rule);padding:30px 0 60px;color:var(--muted);font-size:14.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
+.themebtn{position:fixed;right:16px;bottom:16px;z-index:20;font-family:var(--f-mono);font-size:11px;
+  letter-spacing:.08em;background:var(--surface);color:var(--ink-2);border:1px solid var(--rule-2);
+  border-radius:20px;padding:9px 14px;cursor:pointer;box-shadow:var(--shadow)}
+.themebtn:focus-visible{outline:2px solid var(--c3);outline-offset:2px}
+@media (max-width:1000px){
+  .shell{grid-template-columns:1fr;gap:20px}
+  nav.rail{position:static;max-height:none}
+  nav.rail ol{flex-direction:row;flex-wrap:wrap}
+  nav.rail a{border-left:0;border-bottom:2px solid transparent}
+  .mod-body{grid-template-columns:1fr}
+}
+@media (max-width:600px){
+  .wrap{padding:0 16px}.mod-head{padding:20px}.mod-body{padding:20px}
+  body{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+<header class="top">
+  <canvas id="hero" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="kicker">Rozdział 17 · Pojazdy elektryczne i hybrydowe</div>
+    <h1>Stacja Napędu Elektrycznego</h1>
+    <p class="lede">Czternaście przykładów z rozdziału o napędach EV/HEV — każdy z żywym wykresem,
+      który sam przeliczasz suwakami, i z wyjaśnieniem napisanym tak, żeby zrozumiał je licealista.
+      Przesuń suwak, a wzór natychmiast zamienia się w kształt krzywej.</p>
+    <div class="meta">
+      <span class="tag">14 modeli interaktywnych</span>
+      <span class="tag">dynamika · maszyny · energoelektronika</span>
+      <span class="tag">wszystkie wzory 17.1–17.9</span>
+      <span class="tag">przykład rachunkowy 0–1057 obr/min</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="shell">
+  <nav class="rail" aria-label="Spis modułów">
+    <p>Moduły</p>
+    <ol id="rail"></ol>
+  </nav>
+  <main>
+
+<!-- 01 -->
+<section class="mod" id="m01">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 01 · Rozdz. 17.2</div>
+    <h2>Architektury napędu: BEV, HEV szeregowy, równoległy, mieszany, FCV</h2>
+    <p class="sub">Kto właściwie kręci kołami — silnik spalinowy, elektryczny, czy obaj naraz?</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Wszystkie architektury z rozdziału są tak naprawdę <strong>jednym schematem, z którego coś usuwamy</strong>.
+        Punkt wyjścia to hybryda szeregowo-równoległa z przekładnią planetarną: silnik spalinowy (ICE),
+        maszyna elektryczna EM1 (napędowa) i EM2 (generator).</p>
+      <ul class="plain">
+        <li><b>Szeregowy HEV</b> — ICE nie dotyka kół. Kręci tylko generatorem, prąd idzie do falownika i EM1.
+          Zaleta: silnik spalinowy pracuje ciągle w swoim <em>najlepszym</em> punkcie obrotów i momentu, więc pali mało.</li>
+        <li><b>Równoległy HEV</b> — usuwamy EM2. Do skrzyni podłączone są mechanicznie ICE i EM1; jadą osobno albo razem.
+          Mniej strat przemiany energii, więc sprawność większa niż w szeregowym.</li>
+        <li><b>BEV</b> — zostaje samo EM1 i bateria. Zero emisji, ale drogo i krótki zasięg.</li>
+        <li><b>FCV</b> — miejsce baterii (lub obok niej) zajmuje ogniwo paliwowe zasilane wodorem.</li>
+      </ul>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Szeregowy = jak rower z prądnicą: pedałujesz w prądnicę, a silniczek napędza koło.
+          Równoległy = jak rower elektryczny: i nogi, i silnik dociskają ten sam łańcuch.
+          Mieszany = potrafi przełączać się między jednym a drugim, zależnie co się bardziej opłaca.</p>
+      </div>
+      <p>Wykres obok pokazuje <strong>ten sam odcinek jazdy</strong> (start z miasta, przyspieszenie na drogę
+        szybkiego ruchu, hamowanie) rozliczony dla wybranej architektury: ile kilowatów daje spalinowy,
+        ile elektryczny, a ile wraca do baterii z hamowania odzyskowego.</p>
+    </div>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Architektura">
+        <button data-arch="series" aria-pressed="true">Szeregowy</button>
+        <button data-arch="parallel" aria-pressed="false">Równoległy</button>
+        <button data-arch="split" aria-pressed="false">Mieszany</button>
+        <button data-arch="bev" aria-pressed="false">BEV</button>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c01"></canvas><div class="tip" id="t01"></div></div>
+      <div class="legend" id="l01"></div>
+      <div class="reads" id="r01"></div>
+      <p class="note">Profil prędkości jest wspólny dla wszystkich architektur — różni się tylko podział mocy.
+        Wartości ujemne = moc wraca do baterii (rekuperacja).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="mod" id="m02">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 02 · Tabela 17.2</div>
+    <h2>Stopnie hybrydyzacji: micro, mild, full, plug-in</h2>
+    <p class="sub">Wszystko zależy od jednego stosunku: mocy elektrycznej do mocy całkowitej.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Rozdział mówi wprost: poziomy hybrydy „różnią się stosunkiem mocy między ICE a maszynami elektrycznymi”.
+        Ten jeden parametr decyduje, jakie funkcje samochód w ogóle potrafi wykonać.</p>
+      <div class="eq">stopień hybrydyzacji = P<sub>EM</sub> / (P<sub>EM</sub> + P<sub>ICE</sub>)</div>
+      <p>Przesuwaj suwak mocy elektrycznej — wykres pokazuje, w którym momencie zapala się kolejna funkcja:
+        <strong>start-stop</strong> (kilka kW), <strong>wspomaganie momentem i rekuperacja</strong> (kilkanaście kW),
+        <strong>jazda czysto elektryczna</strong> (kilkadziesiąt kW), a na końcu <strong>ładowanie z gniazdka</strong>,
+        które zależy już nie od mocy, lecz od pojemności baterii.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>To jak z rowerem elektrycznym: mały silniczek tylko pomaga ruszyć, większy pozwala nie pedałować pod górkę,
+          a dopiero duży plus duża bateria pozwalają całkiem schować nogi — i wtedy trzeba go ładować z kontaktu.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s02a">Moc maszyny elektrycznej <b><span id="v02a">15</span> kW</b></label>
+          <input type="range" id="s02a" min="2" max="120" value="15" step="1"></div>
+        <div class="ctrl"><label for="s02b">Moc silnika spalinowego <b><span id="v02b">75</span> kW</b></label>
+          <input type="range" id="s02b" min="0" max="150" value="75" step="1"></div>
+        <div class="ctrl"><label for="s02c">Pojemność baterii <b><span id="v02c">1.5</span> kWh</b></label>
+          <input type="range" id="s02c" min="0.2" max="30" value="1.5" step="0.1"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c02"></canvas><div class="tip" id="t02"></div></div>
+      <div class="reads" id="r02"></div>
+      <div class="tbl-wrap"><table id="tb02"><thead><tr><th>Funkcja</th><th>Próg</th><th>Ten pojazd</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section class="mod" id="m03">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 03 · Rozdz. 17.3.3</div>
+    <h2>Siły działające na pojazd — opór toczenia, aerodynamika, wzniesienie</h2>
+    <p class="sub">„Aby modelować EV, trzeba zidentyfikować wszystkie siły wpływające na dynamikę pojazdu.”</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Cała moc silnika idzie na pokonanie trzech oporów. Każdy zachowuje się inaczej z prędkością —
+        i właśnie dlatego wykres jest ciekawszy niż wzory:</p>
+      <div class="eq">F<sub>toczenia</sub> = f<sub>r</sub>·m·g·cos β &nbsp;<em>(prawie stała)</em></div>
+      <div class="eq">F<sub>aero</sub> = ½·ρ·C<sub>d</sub>·A·v² &nbsp;<em>(rośnie z kwadratem prędkości)</em></div>
+      <div class="eq">F<sub>wzniesienia</sub> = m·g·sin β &nbsp;<em>(zależy tylko od góry)</em></div>
+      <div class="eq">P = F<sub>całk</sub> · v &nbsp;<em>(moc rośnie z v³ przy oporze powietrza)</em></div>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Przy 50 km/h najbardziej męczą cię opony. Przy 130 km/h opony są już nieistotne — walczysz z powietrzem.
+          Podwojenie prędkości daje <em>cztery razy</em> większą siłę oporu powietrza i <em>osiem razy</em> większą moc.
+          Dlatego zasięg auta elektrycznego na autostradzie potrafi spaść o jedną trzecią.</p>
+      </div>
+      <p>Sprawdź to sam: ustaw wzniesienie na 0 %, popatrz gdzie krzywa pomarańczowa przecina niebieską —
+        to <strong>prędkość graniczna</strong>, powyżej której aerodynamika rządzi wszystkim.</p>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s03m">Masa pojazdu <b><span id="v03m">1600</span> kg</b></label>
+          <input type="range" id="s03m" min="600" max="3000" value="1600" step="25"></div>
+        <div class="ctrl"><label for="s03cda">C<sub>d</sub>·A <b><span id="v03cda">0.62</span> m²</b></label>
+          <input type="range" id="s03cda" min="0.3" max="1.6" value="0.62" step="0.01"></div>
+        <div class="ctrl"><label for="s03fr">Współczynnik toczenia f<sub>r</sub> <b><span id="v03fr">0.012</span></b></label>
+          <input type="range" id="s03fr" min="0.005" max="0.03" value="0.012" step="0.001"></div>
+        <div class="ctrl"><label for="s03b">Nachylenie drogi <b><span id="v03b">0</span> %</b></label>
+          <input type="range" id="s03b" min="0" max="20" value="0" step="0.5"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c03"></canvas><div class="tip" id="t03"></div></div>
+      <div class="legend" id="l03"></div>
+      <div class="reads" id="r03"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 -->
+<section class="mod" id="m04">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 04 · Wzory 17.1 i 17.2</div>
+    <h2>Rozkład nacisku na oś przednią i tylną</h2>
+    <p class="sub">Wykres sił dla trójkołowca — dlaczego pod górkę przód robi się „lekki”.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Ze schematu sił (rys. 17.7) wynikają dwa wzory na reakcje normalne. W uproszczonej,
+        statycznej postaci z rozdziału:</p>
+      <div class="eq">N<sub>przód</sub> = (m·g·l<sub>b</sub>·cos β − m·g·h·sin β) / L &nbsp;<em>(17.1)</em></div>
+      <div class="eq">N<sub>tył</sub> = (m·g·l<sub>a</sub>·cos β + m·g·h·sin β) / L &nbsp;<em>(17.2)</em></div>
+      <p>Rozdział dodaje, że <strong>siła hamowania jest proporcjonalna do siły normalnej</strong>:
+        F<sub>b</sub> = μ·N. To dlatego rozkład nacisku decyduje, ile w ogóle da się wyhamować —
+        koło odciążone blokuje się natychmiast.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Wyobraź sobie, że pod górkę cały ciężar „przelewa się” do tyłu — jak woda w wannie, którą przechylasz.
+          Człon <em>m·g·h·sin β</em> to właśnie ta przelana część: odejmowana z przodu, dodawana z tyłu.
+          Im wyżej środek ciężkości (duże h), tym silniejszy efekt — dlatego auta sportowe są tak nisko.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s04h">Wysokość środka ciężkości h <b><span id="v04h">0.55</span> m</b></label>
+          <input type="range" id="s04h" min="0.2" max="1.2" value="0.55" step="0.01"></div>
+        <div class="ctrl"><label for="s04l">Rozstaw osi L <b><span id="v04l">2.60</span> m</b></label>
+          <input type="range" id="s04l" min="1.6" max="3.4" value="2.6" step="0.05"></div>
+        <div class="ctrl"><label for="s04a">Odległość przód–ŚC l<sub>a</sub> <b><span id="v04a">1.20</span> m</b></label>
+          <input type="range" id="s04a" min="0.5" max="2.2" value="1.2" step="0.05"></div>
+        <div class="ctrl"><label for="s04m">Masa <b><span id="v04m">1600</span> kg</b></label>
+          <input type="range" id="s04m" min="400" max="2600" value="1600" step="20"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c04"></canvas><div class="tip" id="t04"></div></div>
+      <div class="legend" id="l04"></div>
+      <div class="reads" id="r04"></div>
+      <p class="note">Oś pozioma: kąt wzniesienia β. Gdy N<sub>przód</sub> dojdzie do zera, przednie koło
+        traci kontakt — to teoretyczna granica wywrotki do tyłu.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section class="mod" id="m05">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 05 · Wzory 17.3 i 17.4</div>
+    <h2>Moment potrzebny na kole — bezwładność plus opory</h2>
+    <p class="sub">Druga zasada dynamiki Newtona przeliczona z drogi na wał napędowy.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Przy warunku toczenia bez poślizgu <em>a = α·R</em> całkowity moment mechaniczny, który musi dostarczyć
+        napęd, to suma czterech składników:</p>
+      <div class="eq">T = J·α + m·a·R + (F<sub>d</sub> + f<sub>r</sub>·m·g·cos β + m·g·sin β)·R</div>
+      <p>gdzie <em>J</em> to moment bezwładności koła, <em>α</em> — przyspieszenie kątowe, <em>R</em> — promień koła,
+        <em>F<sub>d</sub></em> — siła oporu powietrza.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Moment to „siła razy ramię” — czyli jak mocno coś skręcasz. Napęd musi jednocześnie:
+          rozpędzić masę auta (<em>m·a·R</em>), rozkręcić same koła (<em>J·α</em>) i pokonać opory (reszta).
+          Gdy jedziesz ze stałą prędkością, dwa pierwsze człony znikają — zostaje tylko walka z oporami.</p>
+      </div>
+      <p>Na wykresie widać cały przebieg rozpędzania od 0 do zadanej prędkości: kolorowe pasma pokazują,
+        <strong>na co dokładnie idzie moment w każdej chwili</strong>. Zwiększ przyspieszenie —
+        udział bezwładności zaleje wykres. Wydłuż rozpędzanie — zostaną same opory.</p>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s05a">Przyspieszenie <b><span id="v05a">2.5</span> m/s²</b></label>
+          <input type="range" id="s05a" min="0.5" max="6" value="2.5" step="0.1"></div>
+        <div class="ctrl"><label for="s05m">Masa <b><span id="v05m">1600</span> kg</b></label>
+          <input type="range" id="s05m" min="600" max="3000" value="1600" step="25"></div>
+        <div class="ctrl"><label for="s05r">Promień koła R <b><span id="v05r">0.32</span> m</b></label>
+          <input type="range" id="s05r" min="0.2" max="0.5" value="0.32" step="0.01"></div>
+        <div class="ctrl"><label for="s05b">Nachylenie <b><span id="v05b">0</span> %</b></label>
+          <input type="range" id="s05b" min="0" max="15" value="0" step="0.5"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c05"></canvas><div class="tip" id="t05"></div></div>
+      <div class="legend" id="l05"></div>
+      <div class="reads" id="r05"></div>
+    </div>
+  </div>
+</section>
+<!-- 06 -->
+<section class="mod" id="m06">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 06 · Wzory 17.5–17.9</div>
+    <h2>Silnik BLDC — model elektryczny i mechaniczny</h2>
+    <p class="sub">Trapezoidalna siła elektromotoryczna, prąd fazowy i moment złożony z trzech faz.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>W silniku BLDC uzwojenia siedzą w stojanie, a magnes trwały wiruje na wirniku — odwrotnie niż
+        w klasycznym silniku prądu stałego. Dla pojedynczej fazy <em>k</em> (a, b lub c) rozdział podaje:</p>
+      <div class="eq">V<sub>k</sub>(t) = R<sub>k</sub>·i<sub>k</sub>(t) + L<sub>k</sub>·di<sub>k</sub>/dt + e<sub>k</sub>(t) &nbsp;<em>(17.5)</em></div>
+      <div class="eq">J·dω/dt = T<sub>e</sub> − T<sub>L</sub> − B·ω &nbsp;<em>(17.6)</em></div>
+      <div class="eq">T<sub>e</sub> = T<sub>a</sub> + T<sub>b</sub> + T<sub>c</sub> &nbsp;<em>(17.7)</em></div>
+      <div class="eq">T<sub>k</sub> = e<sub>k</sub>·i<sub>k</sub> / ω &nbsp;&nbsp; e<sub>k</sub> = k<sub>e,k</sub>(θ)·ω &nbsp;<em>(17.8, 17.9)</em></div>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Wirujący magnes „wypycha” w cewce napięcie <em>e</em> — to siła przeciwelektromotoryczna (back-EMF).
+          Jest tym większa, im szybciej silnik się kręci. Sterownik wpuszcza prąd dokładnie w te 120°, w których
+          back-EMF jest płaska — wtedy iloczyn <em>e·i</em> jest stały, a więc moment nie faluje.
+          To dlatego wykres prądu wygląda jak „prostokąty”, a nie sinus.</p>
+      </div>
+      <p>Zwiększ obciążenie — prąd rośnie proporcjonalnie. Zwiększ prędkość — rośnie back-EMF, a zapas napięcia maleje.
+        Gdy back-EMF dobije do napięcia zasilania, silnik nie może już przyspieszyć: to jego <strong>prędkość bazowa</strong>.</p>
+    </div>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Widok przebiegu">
+        <button data-w="emf" aria-pressed="true">Back-EMF</button>
+        <button data-w="cur" aria-pressed="false">Prądy faz</button>
+        <button data-w="trq" aria-pressed="false">Moment</button>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl"><label for="s06n">Prędkość <b><span id="v06n">3000</span> obr/min</b></label>
+          <input type="range" id="s06n" min="200" max="6000" value="3000" step="50"></div>
+        <div class="ctrl"><label for="s06t">Moment obciążenia T<sub>L</sub> <b><span id="v06t">8</span> N·m</b></label>
+          <input type="range" id="s06t" min="0" max="30" value="8" step="0.5"></div>
+        <div class="ctrl"><label for="s06k">Stała k<sub>e</sub> <b><span id="v06k">0.055</span> V·s/rad</b></label>
+          <input type="range" id="s06k" min="0.02" max="0.15" value="0.055" step="0.005"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c06"></canvas><div class="tip" id="t06"></div></div>
+      <div class="legend" id="l06"></div>
+      <div class="reads" id="r06"></div>
+      <p class="note">Oś pozioma: kąt elektryczny wirnika 0–360°. Zasilanie przyjęto V<sub>dc</sub> = 400 V,
+        rezystancja fazy 0,15 Ω.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section class="mod" id="m07">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 07 · Rysunek 17.19</div>
+    <h2>Charakterystyka trakcyjna: strefa stałego momentu i stałej mocy</h2>
+    <p class="sub">Najważniejszy wykres całego rozdziału — dlaczego samochód elektryczny nie potrzebuje skrzyni biegów.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Rozdział opisuje to dokładnie: „w strefie stałego momentu silnik dostarcza stały moment znamionowy
+        aż do osiągnięcia prędkości bazowej. Powyżej niej moment maleje proporcjonalnie do prędkości,
+        a silnik wchodzi w strefę stałej mocy”.</p>
+      <div class="eq">n ≤ n<sub>bazowa</sub>: &nbsp; T = T<sub>zn</sub> , &nbsp; P = T·ω &nbsp;<em>(moc rośnie liniowo)</em></div>
+      <div class="eq">n &gt; n<sub>bazowa</sub>: &nbsp; P = P<sub>zn</sub> , &nbsp; T = P<sub>zn</sub>/ω &nbsp;<em>(moment spada jak 1/n)</em></div>
+      <p>Stosunek prędkości maksymalnej do bazowej to <strong>współczynnik zakresu prędkości</strong>.
+        Im większy, tym szerszy zakres pracy bez zmiany przełożenia — a to jest dokładnie ten wymóg
+        z listy „wymagań napędu HEV”: <em>bardzo szeroki zakres prędkości obejmujący strefę stałego momentu i stałej mocy</em>.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Do prędkości bazowej silnik „ciągnie z pełnej siły” — jak na pierwszym biegu.
+          Powyżej niej nie ma już zapasu napięcia, więc pilnuje tylko, żeby moc się nie zmieniła:
+          skoro obroty rosną dwa razy, moment musi spaść dwa razy. Silnik spalinowy tego nie umie —
+          i dlatego auto spalinowe ma skrzynię biegów, a elektryczne zwykle jedno przełożenie.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s07nb">Prędkość bazowa <b><span id="v07nb">3000</span> obr/min</b></label>
+          <input type="range" id="s07nb" min="1000" max="7000" value="3000" step="100"></div>
+        <div class="ctrl"><label for="s07t">Moment znamionowy <b><span id="v07t">220</span> N·m</b></label>
+          <input type="range" id="s07t" min="60" max="450" value="220" step="5"></div>
+        <div class="ctrl"><label for="s07nm">Prędkość maksymalna <b><span id="v07nm">12000</span> obr/min</b></label>
+          <input type="range" id="s07nm" min="4000" max="18000" value="12000" step="200"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c07"></canvas><div class="tip" id="t07"></div></div>
+      <div class="legend" id="l07"></div>
+      <div class="reads" id="r07"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section class="mod" id="m08">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 08 · Rysunek 17.20</div>
+    <h2>Silnik indukcyjny klatkowy — trzy strefy pracy</h2>
+    <p class="sub">Najczęstszy kandydat na napęd HEV: tani, wytrzymały, znosi ciężkie warunki.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Silnik indukcyjny da się sterować „jak silnik obcowzbudny prądu stałego” dzięki
+        <strong>sterowaniu polowo zorientowanemu</strong> (FOC), które rozdziela regulację momentu od regulacji strumienia.
+        Powyżej prędkości bazowej stosuje się <strong>osłabianie pola</strong> (flux weakening) — stąd trzecia strefa
+        na charakterystyce.</p>
+      <ul class="plain">
+        <li><b>Strefa stałego momentu</b> — napięcie stojana rośnie liniowo z częstotliwością (U/f = const).</li>
+        <li><b>Strefa stałej mocy</b> — napięcie osiąga maksimum, strumień słabnie, moment spada jak 1/n.</li>
+        <li><b>Strefa wysokich prędkości</b> — moment spada już jak 1/n², bo ogranicza go moment wypadowy (poślizg krytyczny).</li>
+      </ul>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Poślizg to różnica między prędkością wirującego pola a prędkością wirnika. Bez poślizgu nie ma momentu —
+          wirnik musi „gonić” pole, żeby indukował się w nim prąd. To trochę jak z magnesem ciągniętym nad blachą:
+          dopóki się poruszają względem siebie, blacha czuje siłę.</p>
+      </div>
+      <p>Wady wymienione w rozdziale są równie istotne: duże straty, niższa sprawność, słaby współczynnik mocy
+        i gorsze wykorzystanie falownika — tym silniejsze, im większy i szybszy silnik.</p>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s08nb">Prędkość bazowa <b><span id="v08nb">3000</span> obr/min</b></label>
+          <input type="range" id="s08nb" min="1000" max="6000" value="3000" step="100"></div>
+        <div class="ctrl"><label for="s08s">Poślizg znamionowy <b><span id="v08s">3.0</span> %</b></label>
+          <input type="range" id="s08s" min="0.5" max="8" value="3" step="0.1"></div>
+        <div class="ctrl"><label for="s08fw">Koniec strefy stałej mocy <b><span id="v08fw">2.0</span> × n<sub>b</sub></b></label>
+          <input type="range" id="s08fw" min="1.2" max="4" value="2" step="0.1"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c08"></canvas><div class="tip" id="t08"></div></div>
+      <div class="legend" id="l08"></div>
+      <div class="reads" id="r08"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section class="mod" id="m09">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 09 · Rysunek 17.21 a–b</div>
+    <h2>Silnik z magnesami trwałymi i sterowanie kątem przewodzenia</h2>
+    <p class="sub">Jak rozciągnąć krótką strefę stałej mocy silnika PM.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Zalety silników PM bezszczotkowych wymienione w rozdziale: <strong>duża gęstość mocy</strong>
+        (mała masa i objętość na daną moc), <strong>wyższa sprawność</strong> i <strong>dobre odprowadzanie ciepła</strong>,
+        bo straty powstają w stojanie, blisko obudowy.</p>
+      <p>Wada jest jedna, za to poważna: magnes daje strumień, którego nie da się wyłączyć, więc możliwość osłabiania
+        pola jest ograniczona — i strefa stałej mocy wychodzi krótka (rys. 17.21a). Lekarstwem jest
+        <strong>regulacja kąta przewodzenia</strong> powyżej prędkości bazowej: każdy kolejny stopień kąta
+        „dokłada” kawałek charakterystyki (rys. 17.21b).</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Wyobraź sobie, że popychasz huśtawkę. Jeśli pchasz krótko i dokładnie w dołku — masz duży moment,
+          ale przy dużej prędkości nie zdążysz. Jeśli zaczniesz pchać wcześniej i dłużej (większy kąt przewodzenia),
+          pchnięcie będzie słabsze, ale zdążysz przy każdej prędkości. Właśnie to robi sterownik.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Tryb">
+        <button data-p="a" aria-pressed="true">(a) bez regulacji</button>
+        <button data-p="b" aria-pressed="false">(b) kąt przewodzenia</button>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl"><label for="s09g">Kąt przewodzenia (rodzina krzywych) <b><span id="v09g">40</span>°</b></label>
+          <input type="range" id="s09g" min="20" max="60" value="40" step="5"></div>
+        <div class="ctrl"><label for="s09nb">Prędkość bazowa <b><span id="v09nb">3000</span> obr/min</b></label>
+          <input type="range" id="s09nb" min="1500" max="6000" value="3000" step="100"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c09"></canvas><div class="tip" id="t09"></div></div>
+      <div class="legend" id="l09"></div>
+      <div class="reads" id="r09"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="mod" id="m10">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 10 · Rysunek 17.22</div>
+    <h2>Silnik reluktancyjny przełączalny (SRM) — porównanie trzech maszyn</h2>
+    <p class="sub">Prosta budowa, odporność na awarie, ale hałas i tętnienia momentu.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>SRM nie ma ani magnesów, ani uzwojeń w wirniku — to po prostu ozębiony kawałek stali,
+        który „wskakuje” w miejsce najmniejszego oporu magnetycznego. Stąd zalety z rozdziału:
+        prosta i wytrzymała konstrukcja, praca mimo uszkodzenia jednej fazy, proste sterowanie
+        i <strong>wyjątkowo długa strefa stałej mocy</strong>. Wady: hałas akustyczny, duże tętnienia momentu
+        i nietypowa topologia przekształtnika.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>To działa jak elektromagnes przyciągający gwóźdź: włączasz cewkę, ząb wirnika ustawia się na wprost,
+          wyłączasz — i włączasz następną cewkę. Ciągła gonitwa zębów za cewkami. Ponieważ przyciąganie
+          jest impulsowe, moment „szarpie” — stąd hałas i tętnienia.</p>
+      </div>
+      <p>Wykres nakłada na siebie trzy charakterystyki z rozdziału — IM, PM i SRM — znormalizowane do wspólnej
+        mocy znamionowej. Widać, dlaczego przy wyborze napędu liczą się trzy rzeczy naraz:
+        <strong>sprawność, niezawodność i cena</strong>.</p>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s10nb">Prędkość bazowa <b><span id="v10nb">2500</span> obr/min</b></label>
+          <input type="range" id="s10nb" min="1000" max="5000" value="2500" step="100"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c10"></canvas><div class="tip" id="t10"></div></div>
+      <div class="legend" id="l10"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Maszyna</th><th>Zaleta kluczowa</th><th>Wada kluczowa</th><th>Zakres n<sub>max</sub>/n<sub>b</sub></th></tr></thead>
+        <tbody>
+          <tr><td>Indukcyjny (IM)</td><td>tani, wytrzymały, znosi trudne warunki</td><td>straty, niższa sprawność, słaby cos φ</td><td class="num">3–4</td></tr>
+          <tr><td>PM bezszczotkowy</td><td>największa gęstość mocy i sprawność</td><td>krótka strefa osłabiania pola, cena magnesów</td><td class="num">2–3</td></tr>
+          <tr><td>Reluktancyjny (SRM)</td><td>najprostszy, odporny na awarie</td><td>hałas, tętnienia momentu</td><td class="num">5–7</td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+</section>
+<!-- 11 -->
+<section class="mod" id="m11">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 11 · Rysunki 17.11–17.16</div>
+    <h2>Dwukierunkowa przetwornica DC–DC: buck, boost, buck-boost</h2>
+    <p class="sub">Serce układu zarządzania energią — przepuszcza moc w obie strony.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Rozdział dzieli przetwornice nieizolowane na trzy typy i podaje regułę, gdzie siedzi dławik:
+        „element magazynujący energię indukcyjną umieszczony jest po stronie wysokiego napięcia w przetwornicy
+        typu buck, a po stronie niskiego napięcia w przetwornicy typu boost”.</p>
+      <div class="eq">buck: &nbsp; V<sub>wy</sub> = D · V<sub>we</sub></div>
+      <div class="eq">boost: &nbsp; V<sub>wy</sub> = V<sub>we</sub> / (1 − D)</div>
+      <div class="eq">buck-boost: &nbsp; V<sub>wy</sub> = V<sub>we</sub> · D / (1 − D)</div>
+      <div class="eq">tętnienie prądu: &nbsp; ΔI<sub>L</sub> = V<sub>we</sub>·D / (L·f<sub>s</sub>)</div>
+      <p>Dwukierunkowość działa tak: w trybie <strong>ładowania baterii</strong> pracuje tranzystor S₁ z diodą S₂ —
+        to zwykły buck, moc płynie z szyny HV do baterii. W trybie <strong>rozładowania</strong> role się odwracają
+        (S₂ z diodą S₁) i moc idzie z LV do HV. Ten sam układ, dwa kierunki — dokładnie to,
+        czego potrzeba przy hamowaniu odzyskowym.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Współczynnik wypełnienia <em>D</em> to procent czasu, przez jaki tranzystor jest włączony.
+          D = 0,5 znaczy „pół okresu włączony”. Buck to jakby szybkie stukanie w kran: średni strumień jest mniejszy niż pełny.
+          Boost to odwrotność — dławik magazynuje energię przy zwarciu i oddaje ją „doładowaną” napięciem wejściowym,
+          dlatego napięcie wychodzi wyższe niż weszło.</p>
+      </div>
+      <p>Rozdział podaje też, kiedy potrzebna jest izolacja transformatorem: gdy stosunek HV/LV jest duży
+        (element nie wytrzyma jednocześnie wysokiego napięcia i dużego prądu) oraz gdy obu stron nie wolno
+        uziemić wspólnie.</p>
+    </div>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Typ przetwornicy">
+        <button data-t="buck" aria-pressed="true">Buck</button>
+        <button data-t="boost" aria-pressed="false">Boost</button>
+        <button data-t="bb" aria-pressed="false">Buck-boost</button>
+        <button data-t="ripple" aria-pressed="false">Prąd dławika</button>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl"><label for="s11d">Wypełnienie D <b><span id="v11d">0.50</span></b></label>
+          <input type="range" id="s11d" min="0.05" max="0.92" value="0.5" step="0.01"></div>
+        <div class="ctrl"><label for="s11v">Napięcie wejściowe <b><span id="v11v">300</span> V</b></label>
+          <input type="range" id="s11v" min="48" max="600" value="300" step="6"></div>
+        <div class="ctrl"><label for="s11l">Indukcyjność L <b><span id="v11l">250</span> µH</b></label>
+          <input type="range" id="s11l" min="50" max="1000" value="250" step="10"></div>
+        <div class="ctrl"><label for="s11f">Częstotliwość f<sub>s</sub> <b><span id="v11f">20</span> kHz</b></label>
+          <input type="range" id="s11f" min="5" max="100" value="20" step="1"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c11"></canvas><div class="tip" id="t11"></div></div>
+      <div class="legend" id="l11"></div>
+      <div class="reads" id="r11"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="mod" id="m12">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 12 · Rysunki 17.23–17.26</div>
+    <h2>Ogniwo fotowoltaiczne — charakterystyki I–V oraz P–V</h2>
+    <p class="sub">Dlaczego panel bez układu MPPT marnuje nawet jedną trzecią mocy.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Model z rozdziału to źródło prądu I<sub>ph</sub> równolegle z diodą, plus rezystancje R<sub>sh</sub> i R<sub>s</sub>.
+        Prąd wyjściowy modułu:</p>
+      <div class="eq">I<sub>PV</sub> = N<sub>p</sub>·I<sub>ph</sub> − N<sub>p</sub>·I<sub>o</sub>·[exp( q(V<sub>PV</sub>+I·R<sub>s</sub>) / (N<sub>s</sub>·A·k·T) ) − 1]</div>
+      <div class="eq">I<sub>ph</sub> = [I<sub>sc</sub> + K<sub>i</sub>(T − T<sub>r</sub>)] · G / 1000</div>
+      <p>Dwa wnioski z tych wzorów widać wprost na wykresie: prąd zwarcia jest niemal
+        <strong>wprost proporcjonalny do nasłonecznienia G</strong>, a napięcie obwodu otwartego
+        <strong>maleje, gdy panel się grzeje</strong>. Dlatego w upał panel oddaje mniej mocy, mimo że słońca jest więcej.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Charakterystyka I–V to lista wszystkich par (napięcie, prąd), jakie panel potrafi dać.
+          Moc to ich iloczyn, więc na krzywej P–V jest jeden garb — <em>punkt mocy maksymalnej</em> (MPP).
+          Zadaniem sterownika MPPT jest tak dobierać obciążenie, żeby cały czas siedzieć na czubku tego garbu.
+          Rozdział ujmuje to krótko: panele są drogie, więc „dla każdego nasłonecznienia trzeba wyciągnąć maksimum mocy”.</p>
+      </div>
+      <p>Przełącz widok na P–V, potem przesuwaj suwak nasłonecznienia — zobaczysz, jak czubek garbu wędruje,
+        a wraz z nim punkt pracy, którego szuka algorytm MPPT.</p>
+    </div>
+    <div class="panel">
+      <div class="seg" role="group" aria-label="Typ charakterystyki">
+        <button data-v="iv" aria-pressed="true">I–V</button>
+        <button data-v="pv" aria-pressed="false">P–V</button>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl"><label for="s12g">Nasłonecznienie G <b><span id="v12g">1000</span> W/m²</b></label>
+          <input type="range" id="s12g" min="100" max="1200" value="1000" step="25"></div>
+        <div class="ctrl"><label for="s12t">Temperatura ogniwa <b><span id="v12t">25</span> °C</b></label>
+          <input type="range" id="s12t" min="-10" max="75" value="25" step="1"></div>
+        <div class="ctrl"><label for="s12rs">Rezystancja szeregowa R<sub>s</sub> <b><span id="v12rs">0.25</span> Ω</b></label>
+          <input type="range" id="s12rs" min="0" max="1.2" value="0.25" step="0.01"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c12"></canvas><div class="tip" id="t12"></div></div>
+      <div class="legend" id="l12"></div>
+      <div class="reads" id="r12"></div>
+      <p class="note">Moduł 36 ogniw szeregowo, I<sub>sc</sub> = 8,2 A, współczynnik temperaturowy prądu
+        K<sub>i</sub> = 0,0032 A/K, współczynnik idealności A = 1,3, E<sub>g</sub> = 1,12 eV.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section class="mod" id="m13">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 13 · Rysunki 17.29–17.30</div>
+    <h2>Ogniwo paliwowe — krzywa polaryzacji stosu</h2>
+    <p class="sub">Wodór wchodzi, prąd wychodzi, a jedynym odpadem jest woda.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Proces z rozdziału: wodór trafia na <strong>anodę</strong>, katalizator rozdziela go na dodatni proton
+        i ujemny elektron, elektron musi obejść membranę zewnętrznym obwodem — i to właśnie jest prąd —
+        a na <strong>katodzie</strong> wszystko łączy się z tlenem w wodę.</p>
+      <p>Krzywa polaryzacji ma trzy wyraźne spadki napięcia i każdy ma inną przyczynę fizyczną:</p>
+      <ul class="plain">
+        <li><b>Straty aktywacyjne</b> — stromy spadek przy małych prądach; energia potrzebna, by reakcja w ogóle ruszyła.</li>
+        <li><b>Straty omowe</b> — prosty, liniowy spadek; zwykła rezystancja membrany i elektrod.</li>
+        <li><b>Straty stężeniowe</b> — gwałtowne załamanie na końcu; gaz nie zdąża dopłynąć do elektrody.</li>
+      </ul>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Ogniwo paliwowe to nie bateria — to raczej „elektrownia z rurką”. Bateria ma zapas energii w środku
+          i się kończy. Ogniwo działa tak długo, jak długo dolewasz paliwo. Dlatego rozdział nazywa je
+          <em>stabilnym źródłem mocy</em> i wymienia zastosowania: statki kosmiczne, zdalne stacje meteo, tereny wiejskie.</p>
+      </div>
+      <p>Zwróć uwagę na maksimum krzywej mocy: leży ono <strong>poniżej</strong> napięcia najlepszej sprawności.
+        Dlatego układ z rys. 17.30 ma baterię lub superkondensator — biorą na siebie szczyty przy rozruchu,
+        a ogniwo może pracować spokojnie w swoim optimum.</p>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s13n">Liczba ogniw w stosie <b><span id="v13n">80</span></b></label>
+          <input type="range" id="s13n" min="20" max="400" value="80" step="5"></div>
+        <div class="ctrl"><label for="s13r">Rezystancja obszarowa <b><span id="v13r">0.18</span> Ω·cm²</b></label>
+          <input type="range" id="s13r" min="0.05" max="0.5" value="0.18" step="0.01"></div>
+        <div class="ctrl"><label for="s13i">Prąd graniczny <b><span id="v13i">1.6</span> A/cm²</b></label>
+          <input type="range" id="s13i" min="0.8" max="3" value="1.6" step="0.05"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c13"></canvas><div class="tip" id="t13"></div></div>
+      <div class="legend" id="l13"></div>
+      <div class="reads" id="r13"></div>
+      <p class="note">Powierzchnia aktywna ogniwa 300 cm², napięcie teoretyczne 1,229 V, nachylenie Tafela 60 mV/dek.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="mod" id="m14">
+  <div class="mod-head">
+    <div class="mod-no">Moduł 14 · Przykład rozwiązany, str. 618</div>
+    <h2>Regulacja prędkości silnika DC choperem: zakres 0–1057 obr/min</h2>
+    <p class="sub">Jedyny przykład rachunkowy w rozdziale — przeliczony krok po kroku i narysowany.</p>
+  </div>
+  <div class="mod-body">
+    <div class="prose">
+      <p>Zadanie: silnik obcowzbudny prądu stałego zasilany choperem z szyny V<sub>dc</sub> = 80 V.
+        Szukamy zakresu regulacji prędkości.</p>
+      <p><b>Krok 1 — prędkość minimalna.</b> Chopper przy D = 0 daje V<sub>a</sub> = 0, więc i siła
+        przeciwelektromotoryczna E<sub>b</sub> = 0. Rozdział pisze wprost: <em>„prędkość minimalna wynosi zero,
+        przy niej E<sub>b</sub> = 0”</em>.</p>
+      <div class="eq">V<sub>a</sub> = D · V<sub>dc</sub> &nbsp;<em>(napięcie średnie na twornik)</em></div>
+      <p><b>Krok 2 — prędkość maksymalna.</b> Największe napięcie chopper daje przy D = 1, czyli
+        V<sub>a</sub> = V<sub>dc</sub> = 80 V. Wtedy odejmujemy spadek na rezystancji twornika:</p>
+      <div class="eq">E<sub>b</sub> = V<sub>a</sub> − I<sub>a</sub>·R<sub>a</sub> = 80 − 6·1 = 74 V</div>
+      <div class="eq">n<sub>max</sub> = E<sub>b</sub> / K<sub>e</sub> = 74 / 0,07 = 1057,14 obr/min</div>
+      <p><b>Odpowiedź:</b> zakres regulacji prędkości wynosi <strong>0–1057,14 obr/min</strong>.</p>
+      <div class="school"><b>Jak dla ucznia</b>
+        <p>Chopper to szybko pstrykany wyłącznik. Jeśli włączasz go przez 30 % czasu, silnik „czuje” 30 % z 80 V,
+          czyli 24 V. Silnik kręci się tym szybciej, im większe napięcie zostaje po odjęciu spadku na rezystancji —
+          a że E<sub>b</sub> jest wprost proporcjonalne do obrotów, prędkość rośnie liniowo z D.
+          Zero na wejściu = zero obrotów, pełne napięcie = maksimum obrotów.</p>
+      </div>
+      <p class="note">Rozdział podaje w tekście tylko wynik końcowy; przyjęte tu dane pośrednie
+        (I<sub>a</sub> = 6 A, R<sub>a</sub> = 1 Ω, K<sub>e</sub> = 0,07 V/obr·min⁻¹) są tym jednoznacznym zestawem,
+        który odtwarza dokładnie liczbę 1057,14 obr/min. Suwaki pozwalają sprawdzić, co się zmieni przy innych danych.</p>
+    </div>
+    <div class="panel">
+      <div class="ctrls">
+        <div class="ctrl"><label for="s14d">Wypełnienie D <b><span id="v14d">1.00</span></b></label>
+          <input type="range" id="s14d" min="0" max="1" value="1" step="0.01"></div>
+        <div class="ctrl"><label for="s14v">V<sub>dc</sub> <b><span id="v14v">80</span> V</b></label>
+          <input type="range" id="s14v" min="24" max="240" value="80" step="2"></div>
+        <div class="ctrl"><label for="s14i">Prąd twornika I<sub>a</sub> <b><span id="v14i">6.0</span> A</b></label>
+          <input type="range" id="s14i" min="0" max="20" value="6" step="0.5"></div>
+        <div class="ctrl"><label for="s14r">Rezystancja R<sub>a</sub> <b><span id="v14r">1.00</span> Ω</b></label>
+          <input type="range" id="s14r" min="0.1" max="3" value="1" step="0.05"></div>
+      </div>
+      <div class="chart-wrap"><canvas class="plot" id="c14"></canvas><div class="tip" id="t14"></div></div>
+      <div class="legend" id="l14"></div>
+      <div class="reads" id="r14"></div>
+    </div>
+  </div>
+</section>
+
+  </main>
+</div>
+</div>
+
+<footer><div class="wrap">
+  <span>Modele obliczane na żywo w przeglądarce na podstawie wzorów 17.1–17.9 i rysunków 17.7–17.30
+    z rozdziału „Electric/Hybrid Electric Vehicles”.</span>
+  <span class="note">Wartości domyślne dobrano tak, by odpowiadały typowemu kompaktowemu BEV.</span>
+</div></footer>
+<button class="themebtn" id="themebtn" aria-label="Przełącz motyw">MOTYW</button>
+<script>
+"use strict";
+/* ============ tokens ============ */
+function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function P(){return [tok('--c1'),tok('--c2'),tok('--c3'),tok('--c4'),tok('--c5')];}
+const fmt=(v,d)=>{if(!isFinite(v))return'—';const s=v.toFixed(d===undefined?1:d);return s.replace('.',',');};
+
+/* ============ chart engine ============ */
+function Chart(cid,tid){
+  const cv=document.getElementById(cid), tip=tid?document.getElementById(tid):null;
+  const ctx=cv.getContext('2d'); let S=null, geom=null, hoverX=null;
+  function size(){
+    const r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1;
+    cv.width=Math.max(1,Math.round(r.width*d)); cv.height=Math.max(1,Math.round(r.height*d));
+    ctx.setTransform(d,0,0,d,0,0); return r;
+  }
+  function draw(){
+    if(!S)return; const r=size(), W=r.width, H=r.height;
+    ctx.clearRect(0,0,W,H);
+    const ink=tok('--ink'),ink2=tok('--ink-2'),mut=tok('--muted'),grid=tok('--grid'),surf=tok('--surface');
+    const mono='11px "IBM Plex Mono",monospace';
+    const pad={l:56,r:S.padR!==undefined?S.padR:16,t:14,b:34};
+    const all=S.series.flatMap(s=>s.data);
+    let x0=S.xMin!==undefined?S.xMin:Math.min(...all.map(p=>p[0]));
+    let x1=S.xMax!==undefined?S.xMax:Math.max(...all.map(p=>p[0]));
+    let ys=S.stacked?stackTops():all.map(p=>p[1]);
+    let y0=S.yMin!==undefined?S.yMin:Math.min(0,...ys);
+    let y1=S.yMax!==undefined?S.yMax:Math.max(...ys);
+    if(y1===y0)y1=y0+1; const span=y1-y0; y1+=span*0.08; if(S.yMin===undefined&&y0<0)y0-=span*0.08;
+    const px=v=>pad.l+(v-x0)/(x1-x0)*(W-pad.l-pad.r);
+    const py=v=>H-pad.b-(v-y0)/(y1-y0)*(H-pad.t-pad.b);
+    geom={px,py,x0,x1,y0,y1,pad,W,H};
+    function stackTops(){let t=[];const n=S.series[0].data.length;
+      for(let i=0;i<n;i++){let s=0;S.series.forEach(se=>s+=se.data[i][1]);t.push(s);}return t;}
+    // grid + y ticks
+    ctx.font=mono;ctx.textAlign='right';ctx.textBaseline='middle';
+    const yt=ticks(y0,y1,5);
+    yt.forEach(v=>{const Y=Math.round(py(v))+.5;
+      ctx.strokeStyle=grid;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,Y);ctx.lineTo(W-pad.r,Y);ctx.stroke();
+      ctx.fillStyle=mut;ctx.fillText(S.yFmt?S.yFmt(v):fmt(v,Math.abs(v)<10?1:0),pad.l-8,Y);});
+    // x ticks
+    ctx.textAlign='center';ctx.textBaseline='top';
+    const xt=ticks(x0,x1,6);
+    xt.forEach(v=>{const X=Math.round(px(v))+.5;
+      ctx.strokeStyle=grid;ctx.beginPath();ctx.moveTo(X,pad.t);ctx.lineTo(X,H-pad.b);ctx.stroke();
+      ctx.fillStyle=mut;ctx.fillText(S.xFmt?S.xFmt(v):fmt(v,0),X,H-pad.b+7);});
+    // zero line
+    if(y0<0&&y1>0){const Y=Math.round(py(0))+.5;ctx.strokeStyle=tok('--rule-2');ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(pad.l,Y);ctx.lineTo(W-pad.r,Y);ctx.stroke();}
+    // bands
+    (S.bands||[]).forEach(b=>{const a=px(b.from),c=px(b.to);
+      ctx.fillStyle=b.color||('color-mix(in srgb,'+mut+' 8%,transparent)');ctx.globalAlpha=b.alpha||.07;
+      ctx.fillRect(a,pad.t,c-a,H-pad.t-pad.b);ctx.globalAlpha=1;
+      if(b.label){ctx.fillStyle=mut;ctx.font=mono;ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillText(b.label,(a+c)/2,pad.t+3);}});
+    ctx.save();ctx.beginPath();ctx.rect(pad.l,pad.t-6,W-pad.l-pad.r,H-pad.t-pad.b+6);ctx.clip();
+    if(S.stacked){
+      const n=S.series[0].data.length, base=new Array(n).fill(0);
+      S.series.forEach(se=>{
+        ctx.beginPath();
+        for(let i=0;i<n;i++){const X=px(se.data[i][0]),Y=py(base[i]+se.data[i][1]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+        for(let i=n-1;i>=0;i--){ctx.lineTo(px(se.data[i][0]),py(base[i]));}
+        ctx.closePath();ctx.fillStyle=se.color;ctx.globalAlpha=.55;ctx.fill();ctx.globalAlpha=1;
+        ctx.strokeStyle=surf;ctx.lineWidth=2;ctx.stroke();
+        for(let i=0;i<n;i++)base[i]+=se.data[i][1];
+      });
+    } else {
+      S.series.forEach(se=>{
+        if(se.area){ctx.beginPath();
+          se.data.forEach((p,i)=>{const X=px(p[0]),Y=py(p[1]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});
+          ctx.lineTo(px(se.data[se.data.length-1][0]),py(Math.max(y0,0)));
+          ctx.lineTo(px(se.data[0][0]),py(Math.max(y0,0)));ctx.closePath();
+          ctx.fillStyle=se.color;ctx.globalAlpha=.13;ctx.fill();ctx.globalAlpha=1;}
+        ctx.beginPath();ctx.lineWidth=se.w||2;ctx.strokeStyle=se.color;
+        ctx.setLineDash(se.dash?[5,4]:[]);ctx.lineJoin='round';
+        se.data.forEach((p,i)=>{const X=px(p[0]),Y=py(p[1]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});
+        ctx.stroke();ctx.setLineDash([]);
+      });
+    }
+    ctx.restore();
+    // markers
+    (S.markers||[]).forEach(m=>{const X=px(m.x),Y=py(m.y);
+      ctx.beginPath();ctx.arc(X,Y,6,0,7);ctx.fillStyle=m.color||tok('--accent');ctx.fill();
+      ctx.lineWidth=2.5;ctx.strokeStyle=surf;ctx.stroke();
+      if(m.label){ctx.font='600 11px "IBM Plex Mono",monospace';ctx.fillStyle=ink;
+        const tw=ctx.measureText(m.label).width;
+        ctx.textAlign=(X+tw+16>W-pad.r)?'right':'left';ctx.textBaseline='bottom';
+        ctx.fillText(m.label,ctx.textAlign==='left'?X+10:X-10,Y-7);}});
+    // axis titles
+    ctx.font=mono;ctx.fillStyle=mut;
+    if(S.xLabel){ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(S.xLabel,W-pad.r,H-2);}
+    if(S.yLabel){ctx.save();ctx.translate(11,pad.t);ctx.rotate(-Math.PI/2);
+      ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(S.yLabel,0,0);ctx.restore();}
+    // hover
+    if(hoverX!==null&&!S.noHover)crosshair();
+    function crosshair(){
+      const xv=x0+(hoverX-pad.l)/(W-pad.l-pad.r)*(x1-x0);
+      const d0=S.series[0].data; let idx=0,best=1e18;
+      d0.forEach((p,i)=>{const dd=Math.abs(p[0]-xv);if(dd<best){best=dd;idx=i;}});
+      const X=Math.round(px(d0[idx][0]))+.5;
+      ctx.strokeStyle=tok('--rule-2');ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(X,pad.t);ctx.lineTo(X,H-pad.b);ctx.stroke();ctx.setLineDash([]);
+      let base=0;
+      S.series.forEach(se=>{const v=S.stacked?(base+=se.data[idx][1]):se.data[idx][1];
+        const Y=py(v);ctx.beginPath();ctx.arc(X,Y,4.5,0,7);ctx.fillStyle=se.color;ctx.fill();
+        ctx.lineWidth=2;ctx.strokeStyle=surf;ctx.stroke();});
+      if(tip){
+        let h='<b>'+(S.xFmt?S.xFmt(d0[idx][0]):fmt(d0[idx][0],1))+(S.xUnit||'')+'</b>';
+        S.series.forEach(se=>{h+='<i style="background:'+se.color+'"></i>'+se.name+' '+
+          (S.tFmt?S.tFmt(se.data[idx][1]):fmt(se.data[idx][1],1))+(S.unit||'')+'<br>';});
+        tip.innerHTML=h;tip.classList.add('show');
+        const tw=tip.offsetWidth,th=tip.offsetHeight;
+        let L=X+14; if(L+tw>W-4)L=X-tw-14; if(L<4)L=4;
+        tip.style.left=L+'px';tip.style.top=Math.max(4,Math.min(H-th-4,pad.t+10))+'px';
+      }
+    }
+  }
+  function ticks(a,b,n){const raw=(b-a)/n,m=Math.pow(10,Math.floor(Math.log10(Math.abs(raw)||1)));
+    const c=[1,2,2.5,5,10].map(k=>k*m).find(k=>k>=raw)||10*m;
+    const out=[];for(let v=Math.ceil(a/c)*c;v<=b+1e-9;v+=c)out.push(Math.abs(v)<1e-9?0:v);return out;}
+  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();hoverX=e.clientX-r.left;draw();});
+  cv.addEventListener('pointerleave',()=>{hoverX=null;if(tip)tip.classList.remove('show');draw();});
+  window.addEventListener('resize',()=>draw());
+  return {render(spec){S=spec;draw();},redraw:draw};
+}
+function legend(id,items){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=items.map(s=>'<span><i class="'+(s.dash?'dash':'')+'" style="'+
+    (s.dash?'color:'+s.color:'background:'+s.color)+'"></i>'+s.name+'</span>').join('');
+}
+function reads(id,items){
+  document.getElementById(id).innerHTML=items.map(r=>
+    '<div class="read"><span>'+r.k+'</span><b>'+r.v+(r.u?'<small>'+r.u+'</small>':'')+'</b></div>').join('');
+}
+const G=9.81, RHO=1.225;
+function lin(a,b,n,f){const out=[];for(let i=0;i<=n;i++){const x=a+(b-a)*i/n;out.push([x,f(x)]);}return out;}
+
+/* ============ 01 architektury ============ */
+const ch01=Chart('c01','t01'); let arch01='series';
+const cyc=(()=>{const t=[],v=[];for(let i=0;i<=120;i++){let s;
+  if(i<15)s=i/15*40; else if(i<35)s=40; else if(i<45)s=40-(i-35)/10*40;
+  else if(i<55)s=(i-45)/10*20; else if(i<75)s=20+(i-55)/20*90; else if(i<100)s=110;
+  else s=110-(i-100)/20*110; t.push(i);v.push(Math.max(0,s));}return {t,v};})();
+function draw01(){
+  const m=1600,cda=.62,fr=.012,pal=P();
+  const wheel=[],ice=[],em=[],bat=[];
+  for(let i=0;i<cyc.t.length;i++){
+    const v=cyc.v[i]/3.6, vp=(cyc.v[Math.max(0,i-1)])/3.6, a=v-vp;
+    const F=fr*m*G+.5*RHO*cda*v*v+m*a;
+    const Pw=F*v/1000;
+    let pi=0,pe=0;
+    if(arch01==='bev'){pe=Pw>0?Pw:Pw*.7;}
+    else if(arch01==='series'){pi=Pw>0?26:0;pe=Pw>0?Pw:Pw*.7;}
+    else if(arch01==='parallel'){
+      if(cyc.v[i]<25){pi=0;pe=Pw;} else {pi=Math.min(Pw,45);pe=Pw-pi;}
+      if(Pw<0){pi=0;pe=Pw*.7;}}
+    else {const k=cyc.v[i]<30?0:0.62; pi=Pw>0?Pw*k:0; pe=Pw-pi; if(Pw<0)pe=Pw*.7;}
+    wheel.push([i,Pw]);ice.push([i,pi]);em.push([i,pe]);bat.push([i,pi-(pe>0?pe:pe)]);
+  }
+  const ser=[{name:'Zapotrzebowanie na kołach',color:pal[2],data:wheel,dash:true},
+             {name:'Silnik spalinowy',color:pal[3],data:ice},
+             {name:'Maszyna elektryczna',color:pal[0],data:em,area:true}];
+  ch01.render({series:ser,xLabel:'czas [s]',yLabel:'moc [kW]',xUnit:' s',unit:' kW',
+    xFmt:v=>fmt(v,0),yFmt:v=>fmt(v,0)});
+  legend('l01',ser);
+  const emp=em.map(p=>p[1]), regen=emp.filter(x=>x<0).reduce((s,x)=>s+x,0)/3600*-1;
+  const eice=ice.reduce((s,p)=>s+p[1],0)/3600, eem=emp.filter(x=>x>0).reduce((s,x)=>s+x,0)/3600;
+  reads('r01',[
+    {k:'Szczyt na kołach',v:fmt(Math.max(...wheel.map(p=>p[1])),0),u:'kW'},
+    {k:'Szczyt maszyny el.',v:fmt(Math.max(...emp),0),u:'kW'},
+    {k:'Energia z ICE',v:fmt(eice,2),u:'kWh'},
+    {k:'Energia z EM',v:fmt(eem,2),u:'kWh'},
+    {k:'Odzysk z hamowania',v:fmt(regen,2),u:'kWh'}]);
+}
+document.querySelectorAll('[data-arch]').forEach(b=>b.onclick=()=>{
+  arch01=b.dataset.arch;document.querySelectorAll('[data-arch]').forEach(x=>
+    x.setAttribute('aria-pressed',x===b));draw01();});
+draw01();
+
+/* ============ 02 stopnie hybrydyzacji ============ */
+const ch02=Chart('c02','t02');
+function draw02(){
+  const pe=+s02a.value, pi=+s02b.value, bat=+s02c.value, pal=P();
+  v02a.textContent=pe; v02b.textContent=pi; v02c.textContent=fmt(bat,1);
+  const ratio=pe/(pe+pi||1)*100;
+  const curve=lin(2,120,118,x=>x/(x+pi||1)*100);
+  ch02.render({series:[{name:'Stopień hybrydyzacji',color:pal[0],data:curve,area:true},
+      {name:'Próg jazdy elektrycznej (40 %)',color:pal[1],dash:true,data:[[2,40],[120,40]]},
+      {name:'Próg wspomagania (15 %)',color:pal[3],dash:true,data:[[2,15],[120,15]]}],
+    xLabel:'moc maszyny elektrycznej [kW]',yLabel:'udział elektryczny [%]',xUnit:' kW',unit:' %',
+    yMin:0,yMax:100,markers:[{x:pe,y:ratio,label:fmt(ratio,0)+'%'}]});
+  legend('l02',[{name:'Stopień hybrydyzacji',color:pal[0]},{name:'Próg 40 % — jazda EV',color:pal[1],dash:1},
+    {name:'Próg 15 % — wspomaganie',color:pal[3],dash:1}]);
+  const cls=ratio<8?'Micro HEV':ratio<25?'Mild HEV':(bat>=8?'Plug-in HEV':'Full HEV');
+  reads('r02',[{k:'Udział elektryczny',v:fmt(ratio,0),u:'%'},{k:'Moc łączna',v:fmt(pe+pi,0),u:'kW'},
+    {k:'Zasięg EV (ok.)',v:fmt(bat/0.16,0),u:'km'},{k:'Klasa pojazdu',v:cls}]);
+  const rows=[['Start-stop','P_EM ≥ 3 kW',pe>=3],['Rekuperacja','udział ≥ 8 %',ratio>=8],
+    ['Wspomaganie momentem','udział ≥ 15 %',ratio>=15],['Jazda czysto elektryczna','udział ≥ 40 %',ratio>=40],
+    ['Ładowanie z sieci','bateria ≥ 8 kWh',bat>=8]];
+  tb02.tBodies[0].innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="num">'+r[1]+
+    '</td><td class="num" style="color:'+(r[2]?tok('--good'):tok('--muted'))+'">'+
+    (r[2]?'✓ dostępna':'— brak')+'</td></tr>').join('');
+}
+['s02a','s02b','s02c'].forEach(i=>document.getElementById(i).addEventListener('input',draw02));
+draw02();
+
+/* ============ 03 siły ============ */
+const ch03=Chart('c03','t03');
+function draw03(){
+  const m=+s03m.value,cda=+s03cda.value,fr=+s03fr.value,gp=+s03b.value,pal=P();
+  v03m.textContent=m;v03cda.textContent=fmt(cda,2);v03fr.textContent=fmt(fr,3);v03b.textContent=fmt(gp,1);
+  const b=Math.atan(gp/100);
+  const roll=v=>fr*m*G*Math.cos(b), aero=v=>.5*RHO*cda*Math.pow(v/3.6,2), grade=()=>m*G*Math.sin(b);
+  const ser=[{name:'Opór toczenia',color:pal[1],data:lin(0,200,100,roll)},
+    {name:'Opór powietrza',color:pal[0],data:lin(0,200,100,aero)},
+    {name:'Wzniesienie',color:pal[3],data:lin(0,200,100,grade)},
+    {name:'Suma',color:pal[2],data:lin(0,200,100,v=>roll()+aero(v)+grade()),w:2.5}];
+  ch03.render({series:ser,xLabel:'prędkość [km/h]',yLabel:'siła [N]',xUnit:' km/h',unit:' N',
+    yFmt:v=>fmt(v,0),tFmt:v=>fmt(v,0)});
+  legend('l03',ser);
+  const Fat=v=>roll()+aero(v)+grade(), Pw=v=>Fat(v)*v/3.6/1000;
+  let cross=NaN;for(let v=1;v<=200;v++){if(aero(v)>=roll()){cross=v;break;}}
+  reads('r03',[{k:'Siła @ 100 km/h',v:fmt(Fat(100),0),u:'N'},{k:'Moc @ 100 km/h',v:fmt(Pw(100),1),u:'kW'},
+    {k:'Moc @ 130 km/h',v:fmt(Pw(130),1),u:'kW'},
+    {k:'Aero > toczenie od',v:isNaN(cross)?'—':fmt(cross,0),u:'km/h'}]);
+}
+['s03m','s03cda','s03fr','s03b'].forEach(i=>document.getElementById(i).addEventListener('input',draw03));
+draw03();
+
+/* ============ 04 nacisk na osie ============ */
+const ch04=Chart('c04','t04');
+function draw04(){
+  const h=+s04h.value,L=+s04l.value,la=Math.min(+s04a.value,L-0.2),m=+s04m.value,pal=P();
+  v04h.textContent=fmt(h,2);v04l.textContent=fmt(L,2);v04a.textContent=fmt(la,2);v04m.textContent=m;
+  const lb=L-la;
+  const Nf=d=>{const b=d*Math.PI/180;return Math.max(0,(m*G*lb*Math.cos(b)-m*G*h*Math.sin(b))/L);};
+  const Nr=d=>{const b=d*Math.PI/180;return (m*G*la*Math.cos(b)+m*G*h*Math.sin(b))/L;};
+  const ser=[{name:'N przód (17.1)',color:pal[2],data:lin(0,40,80,Nf)},
+    {name:'N tył (17.2)',color:pal[0],data:lin(0,40,80,Nr)},
+    {name:'Ciężar m·g',color:pal[3],dash:true,data:[[0,m*G],[40,m*G]]}];
+  ch04.render({series:ser,xLabel:'kąt wzniesienia β [°]',yLabel:'siła normalna [N]',xUnit:'°',unit:' N',
+    yFmt:v=>fmt(v/1000,1)+'k',tFmt:v=>fmt(v,0)});
+  legend('l04',ser);
+  const lift=Math.atan(lb/h)*180/Math.PI;
+  reads('r04',[{k:'N przód @ 0°',v:fmt(Nf(0),0),u:'N'},{k:'N tył @ 0°',v:fmt(Nr(0),0),u:'N'},
+    {k:'Rozkład przód/tył',v:fmt(Nf(0)/(m*G)*100,0)+' / '+fmt(Nr(0)/(m*G)*100,0),u:'%'},
+    {k:'Przód odrywa się',v:fmt(lift,1),u:'°'},
+    {k:'Max hamowanie (μ=0,8)',v:fmt(0.8*m*G/m,2),u:'m/s²'}]);
+}
+['s04h','s04l','s04a','s04m'].forEach(i=>document.getElementById(i).addEventListener('input',draw04));
+draw04();
+
+/* ============ 05 moment na kole ============ */
+const ch05=Chart('c05','t05');
+function draw05(){
+  const a=+s05a.value,m=+s05m.value,R=+s05r.value,gp=+s05b.value,pal=P();
+  v05a.textContent=fmt(a,1);v05m.textContent=m;v05r.textContent=fmt(R,2);v05b.textContent=fmt(gp,1);
+  const b=Math.atan(gp/100),J=0.9,fr=.012,cda=.62;
+  const tEnd=33.3/a, n=90, T_in=[],T_r=[],T_a=[],T_g=[];
+  for(let i=0;i<=n;i++){const t=tEnd*i/n, v=a*t;
+    T_in.push([t,(m*a*R)+(J*a/R)]);
+    T_r.push([t,fr*m*G*Math.cos(b)*R]);
+    T_a.push([t,.5*RHO*cda*v*v*R]);
+    T_g.push([t,m*G*Math.sin(b)*R]);}
+  const ser=[{name:'Bezwładność (m·a·R + J·α)',color:pal[0],data:T_in},
+    {name:'Opór toczenia',color:pal[1],data:T_r},
+    {name:'Opór powietrza',color:pal[2],data:T_a},
+    {name:'Wzniesienie',color:pal[3],data:T_g}];
+  ch05.render({series:ser,stacked:true,xLabel:'czas rozpędzania [s]',yLabel:'moment na kołach [N·m]',
+    xUnit:' s',unit:' N·m',xFmt:v=>fmt(v,1),yFmt:v=>fmt(v,0),tFmt:v=>fmt(v,0)});
+  legend('l05',ser);
+  const tot=T_in[n][1]+T_r[n][1]+T_a[n][1]+T_g[n][1];
+  reads('r05',[{k:'Moment startowy',v:fmt(T_in[0][1]+T_r[0][1]+T_g[0][1],0),u:'N·m'},
+    {k:'Moment @ 120 km/h',v:fmt(tot,0),u:'N·m'},
+    {k:'Czas 0–120 km/h',v:fmt(tEnd,1),u:'s'},
+    {k:'Moc szczytowa',v:fmt(tot*33.3/R/1000,0),u:'kW'}]);
+}
+['s05a','s05m','s05r','s05b'].forEach(i=>document.getElementById(i).addEventListener('input',draw05));
+draw05();
+/* ============ 06 BLDC ============ */
+const ch06=Chart('c06','t06'); let w06='emf';
+function trap(th){ // znormalizowana back-EMF, kąt w stopniach
+  let a=((th%360)+360)%360;
+  if(a<30)return a/30; if(a<150)return 1; if(a<210)return 1-(a-150)/30;
+  if(a<330)return -1; return -1+(a-330)/30;
+}
+function sqw(th){let a=((th%360)+360)%360;
+  if(a<30)return 0; if(a<150)return 1; if(a<210)return 0; if(a<330)return -1; return 0;}
+function draw06(){
+  const n=+s06n.value,TL=+s06t.value,ke=+s06k.value,pal=P();
+  v06n.textContent=n;v06t.textContent=fmt(TL,1);v06k.textContent=fmt(ke,3);
+  const w=n*2*Math.PI/60, E=ke*w, I=TL/(2*ke), Vdc=400, Rp=0.15;
+  const mk=(f,ph)=>lin(0,360,360,x=>f(x-ph));
+  let ser,spec;
+  if(w06==='emf'){
+    ser=[{name:'e_a',color:pal[0],data:mk(a=>trap(a)*E,0)},
+         {name:'e_b',color:pal[1],data:mk(a=>trap(a)*E,120)},
+         {name:'e_c',color:pal[2],data:mk(a=>trap(a)*E,240)}];
+    spec={yLabel:'back-EMF [V]',unit:' V'};
+  } else if(w06==='cur'){
+    ser=[{name:'i_a',color:pal[0],data:mk(a=>sqw(a)*I,0)},
+         {name:'i_b',color:pal[1],data:mk(a=>sqw(a)*I,120)},
+         {name:'i_c',color:pal[2],data:mk(a=>sqw(a)*I,240)}];
+    spec={yLabel:'prąd fazowy [A]',unit:' A'};
+  } else {
+    const tq=ph=>lin(0,360,360,x=>trap(x-ph)*sqw(x-ph)*E*I/(w||1));
+    const tot=lin(0,360,360,x=>(trap(x)*sqw(x)+trap(x-120)*sqw(x-120)+trap(x-240)*sqw(x-240))*E*I/(w||1));
+    ser=[{name:'T_a',color:pal[0],data:tq(0)},{name:'T_b',color:pal[1],data:tq(120)},
+         {name:'T_c',color:pal[2],data:tq(240)},{name:'T całkowity (17.7)',color:pal[3],data:tot,w:2.5}];
+    spec={yLabel:'moment [N·m]',unit:' N·m'};
+  }
+  ch06.render(Object.assign({series:ser,xLabel:'kąt elektryczny [°]',xUnit:'°',xMin:0,xMax:360,
+    xFmt:v=>fmt(v,0),tFmt:v=>fmt(v,2)},spec));
+  legend('l06',ser);
+  const Pmech=TL*w/1000, Pcu=3*I*I*Rp/1000, head=Vdc-2*E;
+  reads('r06',[{k:'Back-EMF szczyt',v:fmt(E,1),u:'V'},{k:'Prąd fazowy',v:fmt(I,1),u:'A'},
+    {k:'Moc mechaniczna',v:fmt(Pmech,2),u:'kW'},{k:'Straty w miedzi',v:fmt(Pcu,2),u:'kW'},
+    {k:'Zapas napięcia',v:fmt(head,0),u:'V'},
+    {k:'Prędkość bazowa',v:fmt(Vdc/(2*ke)*60/(2*Math.PI),0),u:'obr/min'}]);
+}
+document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{w06=b.dataset.w;
+  document.querySelectorAll('[data-w]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw06();});
+['s06n','s06t','s06k'].forEach(i=>document.getElementById(i).addEventListener('input',draw06));
+draw06();
+
+/* ============ 07 charakterystyka trakcyjna ============ */
+const ch07=Chart('c07','t07');
+function draw07(){
+  let nb=+s07nb.value, T=+s07t.value, nm=+s07nm.value, pal=P();
+  if(nm<nb+500){nm=nb+500;s07nm.value=nm;}
+  v07nb.textContent=nb;v07t.textContent=T;v07nm.textContent=nm;
+  const Pn=T*nb*2*Math.PI/60/1000;
+  const tq=lin(1,nm,200,n=>n<=nb?100:100*nb/n);
+  const pw=lin(1,nm,200,n=>n<=nb?100*n/nb:100);
+  const ser=[{name:'Moment (% znamionowego)',color:pal[0],data:tq,area:true},
+             {name:'Moc (% znamionowej)',color:pal[2],data:pw}];
+  ch07.render({series:ser,xLabel:'prędkość [obr/min]',yLabel:'wartość względna [%]',xUnit:' obr/min',unit:' %',
+    yMin:0,yMax:115,xFmt:v=>fmt(v,0),tFmt:v=>fmt(v,0),
+    bands:[{from:1,to:nb,label:'stały moment',color:pal[0],alpha:.06},
+           {from:nb,to:nm,label:'stała moc',color:pal[2],alpha:.06}],
+    markers:[{x:nb,y:100,label:'n bazowa'}]});
+  legend('l07',ser);
+  reads('r07',[{k:'Moc znamionowa',v:fmt(Pn,0),u:'kW'},
+    {k:'Zakres prędkości',v:fmt(nm/nb,1)+'×'},
+    {k:'Moment @ n max',v:fmt(T*nb/nm,0),u:'N·m'},
+    {k:'Moment @ 2× n bazowej',v:fmt(T/2,0),u:'N·m'}]);
+}
+['s07nb','s07t','s07nm'].forEach(i=>document.getElementById(i).addEventListener('input',draw07));
+draw07();
+
+/* ============ 08 silnik indukcyjny ============ */
+const ch08=Chart('c08','t08');
+function draw08(){
+  const nb=+s08nb.value, s=+s08s.value, fwk=+s08fw.value, pal=P();
+  v08nb.textContent=nb;v08s.textContent=fmt(s,1);v08fw.textContent=fmt(fwk,1);
+  const n2=nb*fwk, nmax=nb*4;
+  const T=n=>n<=nb?100:(n<=n2?100*nb/n:100*nb*n2/(n*n));
+  const U=n=>n<=nb?100*n/nb:100;
+  const SL=n=>n<=nb?s:s*(n/nb);
+  const ser=[{name:'Moment (%)',color:pal[0],data:lin(1,nmax,220,T),area:true},
+    {name:'Napięcie stojana (%)',color:pal[2],data:lin(1,nmax,220,U),dash:true},
+    {name:'Poślizg (%)',color:pal[1],data:lin(1,nmax,220,SL)}];
+  ch08.render({series:ser,xLabel:'prędkość [obr/min]',yLabel:'wartość względna [%]',xUnit:' obr/min',unit:' %',
+    yMin:0,yMax:115,xFmt:v=>fmt(v,0),tFmt:v=>fmt(v,1),
+    bands:[{from:1,to:nb,label:'stały moment',color:pal[0],alpha:.06},
+      {from:nb,to:n2,label:'stała moc',color:pal[2],alpha:.06},
+      {from:n2,to:nmax,label:'1/n² — wysokie obroty',color:pal[1],alpha:.06}]});
+  legend('l08',ser);
+  reads('r08',[{k:'Koniec stałej mocy',v:fmt(n2,0),u:'obr/min'},
+    {k:'Moment @ 3× n bazowej',v:fmt(T(3*nb),0),u:'%'},
+    {k:'Prędkość synchron. @ n b.',v:fmt(nb/(1-s/100),0),u:'obr/min'},
+    {k:'Straty poślizgu @ n b.',v:fmt(s,1),u:'% mocy'}]);
+}
+['s08nb','s08s','s08fw'].forEach(i=>document.getElementById(i).addEventListener('input',draw08));
+draw08();
+
+/* ============ 09 PM + kąt przewodzenia ============ */
+const ch09=Chart('c09','t09'); let p09='a';
+function draw09(){
+  const g=+s09g.value, nb=+s09nb.value, pal=P();
+  v09g.textContent=g;v09nb.textContent=nb;
+  const nmax=nb*4;
+  const base=n=>n<=nb?100:Math.max(0,100*Math.pow(nb/n,1.9));
+  let ser;
+  if(p09==='a'){
+    ser=[{name:'Moment PM (bez regulacji)',color:pal[0],data:lin(1,nmax,200,base),area:true}];
+  } else {
+    const angs=[20,30,40,50,60], cols=[pal[1],pal[2],pal[3],pal[4],pal[0]];
+    ser=angs.map((A,i)=>({name:A+'°',color:cols[i],w:A===g?2.8:1.6,
+      data:lin(1,nmax,200,n=>{const k=1+(A-20)/40*1.6;
+        return n<=nb?100:Math.max(0,100*Math.pow(nb*k/n,1.5)/Math.pow(k,1.5)*Math.pow(k,0.9));})}));
+    ser.unshift({name:'Bez regulacji',color:tok('--muted'),dash:true,w:1.5,data:lin(1,nmax,200,base)});
+  }
+  ch09.render({series:ser,xLabel:'prędkość [obr/min]',yLabel:'moment (% znamionowego)',xUnit:' obr/min',
+    unit:' %',yMin:0,yMax:115,xFmt:v=>fmt(v,0),tFmt:v=>fmt(v,0),
+    bands:[{from:1,to:nb,label:'stały moment',color:pal[0],alpha:.06}]});
+  legend('l09',p09==='a'?ser:ser.map(s=>({name:s.name==='Bez regulacji'?s.name:'kąt '+s.name,
+    color:s.color,dash:s.dash})));
+  const cur=ser[ser.length-1];
+  const at2=v=>{const d=cur.data.find(p=>p[0]>=v*nb);return d?d[1]:0;};
+  reads('r09',[{k:'Moment @ 2× n b.',v:fmt(at2(2),0),u:'%'},{k:'Moment @ 3× n b.',v:fmt(at2(3),0),u:'%'},
+    {k:'Tryb',v:p09==='a'?'bez regulacji':'kąt '+g+'°'},
+    {k:'Zakres użyteczny',v:p09==='a'?'≈2×':'≈'+fmt(2+(g-20)/40*2.5,1)+'×'}]);
+}
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{p09=b.dataset.p;
+  document.querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw09();});
+['s09g','s09nb'].forEach(i=>document.getElementById(i).addEventListener('input',draw09));
+draw09();
+
+/* ============ 10 SRM vs IM vs PM ============ */
+const ch10=Chart('c10','t10');
+function draw10(){
+  const nb=+s10nb.value,pal=P(),nmax=nb*7;
+  const im=n=>n<=nb?100:(n<=nb*2?100*nb/n:100*nb*nb*2/(n*n));
+  const pm=n=>n<=nb?100:Math.max(0,100*Math.pow(nb/n,1.9));
+  const srm=n=>n<=nb?100:100*nb/n;
+  const ser=[{name:'Indukcyjny (IM)',color:pal[1],data:lin(1,nmax,240,im)},
+    {name:'PM bezszczotkowy',color:pal[0],data:lin(1,nmax,240,pm)},
+    {name:'Reluktancyjny (SRM)',color:pal[2],data:lin(1,nmax,240,srm),w:2.6}];
+  ch10.render({series:ser,xLabel:'prędkość [obr/min]',yLabel:'moment (% znamionowego)',xUnit:' obr/min',
+    unit:' %',yMin:0,yMax:115,xFmt:v=>fmt(v,0),tFmt:v=>fmt(v,0),
+    bands:[{from:1,to:nb,label:'stały moment',color:pal[2],alpha:.06}]});
+  legend('l10',ser);
+}
+s10nb.addEventListener('input',()=>{v10nb.textContent=s10nb.value;draw10();});
+draw10();
+/* ============ 11 przetwornica DC-DC ============ */
+const ch11=Chart('c11','t11'); let t11='buck';
+function draw11(){
+  const D=+s11d.value,Vin=+s11v.value,L=+s11l.value*1e-6,fs=+s11f.value*1e3,pal=P();
+  v11d.textContent=fmt(D,2);v11v.textContent=Vin;v11l.textContent=s11l.value;v11f.textContent=s11f.value;
+  const vout={buck:d=>Vin*d, boost:d=>Vin/(1-d), bb:d=>Vin*d/(1-d)};
+  const dI=Vin*D/(L*fs);
+  if(t11==='ripple'){
+    const Iavg=40, T=1/fs*1e6;
+    const pts=[];for(let i=0;i<=200;i++){const t=2*T*i/200, ph=(t%T)/T;
+      pts.push([t, ph<D ? Iavg-dI/2+dI*ph/D : Iavg+dI/2-dI*(ph-D)/(1-D)]);}
+    const ser=[{name:'Prąd dławika i_L',color:pal[0],data:pts,area:true},
+      {name:'Wartość średnia',color:pal[2],dash:true,data:[[0,Iavg],[2*T,Iavg]]}];
+    ch11.render({series:ser,xLabel:'czas [µs]',yLabel:'prąd dławika [A]',xUnit:' µs',unit:' A',
+      xFmt:v=>fmt(v,1),tFmt:v=>fmt(v,1)});
+    legend('l11',ser);
+  } else {
+    const ser=[{name:'Buck',color:pal[1],data:lin(.05,.92,180,vout.buck),w:t11==='buck'?2.8:1.5,dash:t11!=='buck'},
+      {name:'Boost',color:pal[0],data:lin(.05,.92,180,vout.boost),w:t11==='boost'?2.8:1.5,dash:t11!=='boost'},
+      {name:'Buck-boost',color:pal[2],data:lin(.05,.92,180,vout.bb),w:t11==='bb'?2.8:1.5,dash:t11!=='bb'}];
+    ch11.render({series:ser,xLabel:'współczynnik wypełnienia D',yLabel:'napięcie wyjściowe [V]',unit:' V',
+      xFmt:v=>fmt(v,2),tFmt:v=>fmt(v,0),yMin:0,yMax:Math.min(vout.boost(.92),Vin*8),
+      markers:[{x:D,y:Math.min(vout[t11](D),Vin*8),label:fmt(vout[t11](D),0)+' V'}]});
+    legend('l11',ser);
+  }
+  reads('r11',[{k:'V wyjściowe',v:fmt(vout[t11==='ripple'?'buck':t11](D),0),u:'V'},
+    {k:'Tętnienie ΔI_L',v:fmt(dI,1),u:'A'},
+    {k:'Okres łączeń',v:fmt(1/fs*1e6,1),u:'µs'},
+    {k:'Czas załączenia',v:fmt(D/fs*1e6,1),u:'µs'},
+    {k:'Energia w dławiku',v:fmt(.5*L*40*40,2),u:'J'}]);
+}
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{t11=b.dataset.t;
+  document.querySelectorAll('[data-t]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw11();});
+['s11d','s11v','s11l','s11f'].forEach(i=>document.getElementById(i).addEventListener('input',draw11));
+draw11();
+
+/* ============ 12 fotowoltaika ============ */
+const ch12=Chart('c12','t12'); let v12='iv';
+const PVK={Isc:8.2,Ki:0.0032,Ns:36,A:1.3,Eg:1.12,Tr:298.15,Voc:21.6};
+function pvCurve(G,Tc,Rs){
+  const T=Tc+273.15, k=1.380649e-23, q=1.602e-19;
+  const Vt=PVK.Ns*PVK.A*k*T/q;
+  const Iph=(PVK.Isc+PVK.Ki*(T-PVK.Tr))*G/1000;
+  const Irs=PVK.Isc/(Math.exp(q*PVK.Voc/(PVK.Ns*PVK.A*k*PVK.Tr))-1);
+  const Io=Irs*Math.pow(T/PVK.Tr,3)*Math.exp(q*PVK.Eg/(PVK.A*k)*(1/PVK.Tr-1/T));
+  const pts=[];let I=Iph;
+  for(let i=0;i<=180;i++){
+    const V=26*i/180;
+    for(let it=0;it<40;it++){
+      const f=Iph-Io*(Math.exp((V+I*Rs)/Vt)-1)-I;
+      const df=-Io*Math.exp((V+I*Rs)/Vt)*Rs/Vt-1;
+      const nI=I-f/df; if(!isFinite(nI))break; I=nI;
+    }
+    if(I<0){pts.push([V,0]);break;}
+    pts.push([V,I]);
+  }
+  return pts;
+}
+function draw12(){
+  const G=+s12g.value,Tc=+s12t.value,Rs=+s12rs.value,pal=P();
+  v12g.textContent=G;v12t.textContent=Tc;v12rs.textContent=fmt(Rs,2);
+  const sets=[{g:G,c:pal[0],n:'G = '+G+' W/m² (ustawione)'},{g:800,c:pal[1],n:'G = 800 W/m²'},
+    {g:500,c:pal[2],n:'G = 500 W/m²'}];
+  const ser=[],mk=[];let mpp=null;
+  sets.forEach((s,i)=>{
+    const c=pvCurve(s.g,Tc,Rs);
+    const d=v12==='iv'?c:c.map(p=>[p[0],p[0]*p[1]]);
+    let best=d[0];d.forEach(p=>{if(p[0]*p[1]>best[0]*best[1])best=p;});
+    const pk=c.reduce((b,p)=>p[0]*p[1]>b[0]*b[1]?p:b,c[0]);
+    if(i===0){mpp={v:pk[0],i:pk[1],p:pk[0]*pk[1],voc:c[c.length-1][0],isc:c[0][1]};}
+    ser.push({name:s.n,color:s.c,data:d,w:i===0?2.8:1.8,area:i===0});
+    mk.push({x:pk[0],y:v12==='iv'?pk[1]:pk[0]*pk[1],color:s.c,label:i===0?'MPP':''});
+  });
+  ch12.render({series:ser,xLabel:'napięcie modułu [V]',
+    yLabel:v12==='iv'?'prąd [A]':'moc [W]',xUnit:' V',unit:v12==='iv'?' A':' W',
+    xFmt:v=>fmt(v,1),tFmt:v=>fmt(v,2),yMin:0,markers:mk});
+  legend('l12',ser);
+  reads('r12',[{k:'V obwodu otwartego',v:fmt(mpp.voc,1),u:'V'},{k:'Prąd zwarcia',v:fmt(mpp.isc,2),u:'A'},
+    {k:'Moc w MPP',v:fmt(mpp.p,1),u:'W'},{k:'V w MPP',v:fmt(mpp.v,1),u:'V'},
+    {k:'I w MPP',v:fmt(mpp.i,2),u:'A'},{k:'Współczynnik FF',v:fmt(mpp.p/(mpp.voc*mpp.isc),2)}]);
+}
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{v12=b.dataset.v;
+  document.querySelectorAll('[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw12();});
+['s12g','s12t','s12rs'].forEach(i=>document.getElementById(i).addEventListener('input',draw12));
+draw12();
+
+/* ============ 13 ogniwo paliwowe ============ */
+const ch13=Chart('c13','t13');
+function draw13(){
+  const N=+s13n.value,Rr=+s13r.value,il=+s13i.value,pal=P(),Area=300;
+  v13n.textContent=N;v13r.textContent=fmt(Rr,2);v13i.textContent=fmt(il,2);
+  const E0=1.229,b=0.06,i0=1e-4;
+  const vcell=i=>{const ii=Math.max(i,1e-5);
+    let v=E0-b*Math.log10(ii/i0)-Rr*ii+0.03*Math.log10(1-Math.min(ii/il,0.999));
+    return Math.max(0,v);};
+  const pts=lin(0.001,il*0.995,200,i=>vcell(i));
+  const Vs=pts.map(p=>[p[0],p[1]*N]);
+  const Ps=pts.map(p=>[p[0],p[1]*N*p[0]*Area/1000]);
+  const vmax=Math.max(...Vs.map(p=>p[1])), pmax=Math.max(...Ps.map(p=>p[1]));
+  const ser=[{name:'Napięcie stosu (% U max)',color:pal[0],data:Vs.map(p=>[p[0],p[1]/vmax*100]),area:true},
+    {name:'Moc stosu (% P max)',color:pal[2],data:Ps.map(p=>[p[0],p[1]/pmax*100])},
+    {name:'Sprawność (% wzgl. 1,229 V)',color:pal[1],data:pts.map(p=>[p[0],p[1]/E0*100]),dash:true}];
+  const ipk=Ps.reduce((b2,p)=>p[1]>b2[1]?p:b2,Ps[0]);
+  ch13.render({series:ser,xLabel:'gęstość prądu [A/cm²]',yLabel:'wartość względna [%]',xUnit:' A/cm²',
+    unit:' %',yMin:0,yMax:115,xFmt:v=>fmt(v,2),tFmt:v=>fmt(v,0),
+    markers:[{x:ipk[0],y:100,label:'P max'}],
+    bands:[{from:0,to:il*0.08,label:'aktywacja',color:pal[0],alpha:.06},
+      {from:il*0.08,to:il*0.75,label:'straty omowe',color:pal[2],alpha:.06},
+      {from:il*0.75,to:il,label:'stężeniowe',color:pal[1],alpha:.06}]});
+  legend('l13',ser);
+  reads('r13',[{k:'Napięcie jałowe stosu',v:fmt(vmax,0),u:'V'},{k:'Moc maksymalna',v:fmt(pmax,1),u:'kW'},
+    {k:'Prąd przy P max',v:fmt(ipk[0]*Area,0),u:'A'},
+    {k:'Napięcie przy P max',v:fmt(vcell(ipk[0])*N,0),u:'V'},
+    {k:'Sprawność przy P max',v:fmt(vcell(ipk[0])/E0*100,0),u:'%'}]);
+}
+['s13n','s13r','s13i'].forEach(i=>document.getElementById(i).addEventListener('input',draw13));
+draw13();
+
+/* ============ 14 przykład: chopper DC ============ */
+const ch14=Chart('c14','t14');
+function draw14(){
+  const D=+s14d.value,Vdc=+s14v.value,Ia=+s14i.value,Ra=+s14r.value,Ke=0.07,pal=P();
+  v14d.textContent=fmt(D,2);v14v.textContent=Vdc;v14i.textContent=fmt(Ia,1);v14r.textContent=fmt(Ra,2);
+  const nOf=d=>Math.max(0,(d*Vdc-Ia*Ra)/Ke);
+  const ideal=d=>d*Vdc/Ke;
+  const ser=[{name:'Prędkość rzeczywista n(D)',color:pal[0],data:lin(0,1,100,nOf),area:true},
+    {name:'Bez spadku I_a·R_a',color:pal[2],dash:true,data:lin(0,1,100,ideal)}];
+  const n=nOf(D), Va=D*Vdc, Eb=Math.max(0,Va-Ia*Ra);
+  ch14.render({series:ser,xLabel:'współczynnik wypełnienia D',yLabel:'prędkość [obr/min]',
+    unit:' obr/min',xFmt:v=>fmt(v,2),tFmt:v=>fmt(v,0),yFmt:v=>fmt(v,0),yMin:0,
+    markers:[{x:D,y:n,label:fmt(n,1)+' obr/min'}]});
+  legend('l14',ser);
+  reads('r14',[{k:'V_a = D·V_dc',v:fmt(Va,1),u:'V'},{k:'Spadek I_a·R_a',v:fmt(Ia*Ra,1),u:'V'},
+    {k:'E_b',v:fmt(Eb,1),u:'V'},{k:'Prędkość n',v:fmt(n,1),u:'obr/min'},
+    {k:'Prędkość maks. (D=1)',v:fmt(nOf(1),2),u:'obr/min'},
+    {k:'Zakres regulacji',v:'0 – '+fmt(nOf(1),0),u:'obr/min'}]);
+}
+['s14d','s14v','s14i','s14r'].forEach(i=>document.getElementById(i).addEventListener('input',draw14));
+draw14();
+
+/* ============ nawigacja ============ */
+const titles=[['01','Architektury napędu'],['02','Stopnie hybrydyzacji'],['03','Siły na pojeździe'],
+  ['04','Nacisk na osie'],['05','Moment na kołach'],['06','Silnik BLDC'],['07','Charakterystyka trakcyjna'],
+  ['08','Silnik indukcyjny'],['09','Magnesy trwałe'],['10','Silnik SRM'],['11','Przetwornica DC–DC'],
+  ['12','Fotowoltaika'],['13','Ogniwo paliwowe'],['14','Przykład: chopper DC']];
+document.getElementById('rail').innerHTML=titles.map(t=>
+  '<li><a href="#m'+t[0]+'" data-m="m'+t[0]+'"><span>'+t[0]+'</span>'+t[1]+'</a></li>').join('');
+const links=[...document.querySelectorAll('#rail a')];
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)
+  links.forEach(a=>a.classList.toggle('on',a.dataset.m===e.target.id));});},
+  {rootMargin:'-15% 0px -70% 0px'});
+document.querySelectorAll('section.mod').forEach(s=>obs.observe(s));
+
+/* ============ motyw ============ */
+const allCharts=[ch01,ch02,ch03,ch04,ch05,ch06,ch07,ch08,ch09,ch10,ch11,ch12,ch13,ch14];
+const redrawAll=()=>[draw01,draw02,draw03,draw04,draw05,draw06,draw07,draw08,draw09,draw10,
+  draw11,draw12,draw13,draw14].forEach(f=>f());
+document.getElementById('themebtn').onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const dark=cur? cur==='dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  requestAnimationFrame(()=>{redrawAll();hero();});
+};
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{redrawAll();hero();});
+window.addEventListener('resize',()=>{clearTimeout(window.__rt);
+  window.__rt=setTimeout(()=>{redrawAll();hero();},150);});
+
+/* ============ tło nagłówka: linie pola ============ */
+function hero(){
+  const cv=document.getElementById('hero');const r=cv.getBoundingClientRect();
+  const d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;
+  const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,r.width,r.height);
+  const acc=tok('--accent'),c2=tok('--c2');
+  for(let i=0;i<26;i++){
+    x.beginPath();x.globalAlpha=.10+.10*(i%3)/2;
+    x.strokeStyle=i%3===0?acc:c2;x.lineWidth=1;
+    const amp=8+i*1.5, yo=r.height*(i/26);
+    for(let px2=0;px2<=r.width;px2+=6){
+      const y=yo+Math.sin((px2/r.width)*Math.PI*2+i*0.4)*amp*Math.sin(px2/r.width*Math.PI);
+      px2?x.lineTo(px2,y):x.moveTo(px2,y);}
+    x.stroke();
+  }
+  x.globalAlpha=1;
+}
+hero();
+</script>
